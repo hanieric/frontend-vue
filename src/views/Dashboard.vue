@@ -1,28 +1,33 @@
 <script setup>
-    import axios from 'axios';
-    import { ref } from 'vue';
-    import { useRouter } from 'vue-router';
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import axiosInstance from "../lib/axios_instance.js";
+import useCheckToken from "../hooks/use_check_token.js";
 
+const hasil = ref("");
+const router = useRouter();
+const { isTokenValid, checkToken } = useCheckToken();
 
-    const hasil = ref('');
-    const router = useRouter();
-    const token = {
-      session: localStorage.getItem("jwtToken"),
-    };
-    const username = localStorage.getItem("username")
-    axios.post('http://localhost:3000/dashboard',token)
+checkToken();
+
+if (!isTokenValid.value) {
+  router.push("/");
+} else {
+  const username = localStorage.getItem("username");
+
+  axiosInstance
+    .post("http://localhost:3000/dashboard")
     .then((res) => {
-    hasil.value = `HALLO , ${username} . SELAMAT DATANG KEMBALI DI DASHBOARD USER DENGAN ID ${res.data.userId} `;
+      hasil.value = `HALLO , ${username} . SELAMAT DATANG KEMBALI DI DASHBOARD USER DENGAN ID ${res.data.userId} `;
     })
     .catch((err) => {
-    console.error(err);
-    hasil.value = (err.response && err.response.data) || err.message;
-    router.push('/')
-    window.location.replace('http://localhost:5173');
+      console.error(err);
+      hasil.value = (err.response && err.response.data) || err.message;
+      router.push("/");
     });
-
+}
 </script>
 
 <template>
-    <div>{{ hasil }}</div>
+  <div>{{ hasil }}</div>
 </template>
