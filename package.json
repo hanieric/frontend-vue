@@ -10,8 +10,14 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
+    "@popperjs/core": "^2.11.8",
     "@tailwindcss/cli": "^4.1.10",
     "axios": "^1.6.5",
+    "bootstrap": "5.3.x",
+    "bootstrap-vue-next": "^0.30.1",
     "cool-ascii-faces": "^1.3.4",
     "dotenv": "^16.5.0",
     "figlet": "^1.7.0",
