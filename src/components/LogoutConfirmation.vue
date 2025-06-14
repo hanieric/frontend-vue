@@ -1,7 +1,7 @@
 <template>
   <VueFinalModal
     v-model="show"
-    :click-to-close="false"
+    :click-to-close="true"
     :esc-to-close="true"
     class="fixed inset-0 flex items-center justify-center z-50 bg-black/40"
     overlay-transition="vfm-fade"
@@ -33,7 +33,6 @@
 <script setup>
 import { ref, defineEmits, defineProps, watch } from "vue";
 import { VueFinalModal } from "vue-final-modal";
-import { onMounted, onBeforeUnmount } from "vue";
 
 const props = defineProps({
   modelValue: {
@@ -65,25 +64,4 @@ function confirm() {
   emit("confirm");
   show.value = false;
 }
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    cancel();
-  }
-});
-
-function onClickOutside(event) {
-  const modal = document.getElementById("logout-confirmation-modal");
-  if (modal && !modal.contains(event.target)) {
-    cancel();
-  }
-}
-
-onMounted(() => {
-  document.addEventListener("mousedown", onClickOutside);
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener("mousedown", onClickOutside);
-});
 </script>

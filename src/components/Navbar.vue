@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import { useAuthStore } from "../store/auth";
 import {
@@ -10,6 +10,7 @@ import {
   ArrowRightStartOnRectangleIcon,
   KeyIcon,
   UserPlusIcon,
+  Bars3Icon,
 } from "@heroicons/vue/24/outline";
 import NavbarItem from "./NavbarItem.vue";
 import { useToast } from "vue-toastification";
@@ -70,10 +71,6 @@ onBeforeUnmount(() => {
 
 const showLogoutConfirmation = ref(false);
 
-function showLogoutConfirmationDialog() {
-  showLogoutConfirmation.value = true;
-}
-
 function handleLogout() {
   authStore.logout();
   showMenu.value = false;
@@ -108,19 +105,7 @@ function handleLogout() {
           aria-label="Toggle navigation"
           @click="showMenu = !showMenu"
         >
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
+          <Bars3Icon class="w-6 h-6" />
         </button>
         <div
           v-if="showMenu"
@@ -172,7 +157,10 @@ function handleLogout() {
               </li>
               <li>
                 <button
-                  @click="showLogoutConfirmationDialog"
+                  @click="
+                    showLogoutConfirmation = true;
+                    showMenu = false;
+                  "
                   class="block px-4 py-2 text-red-600 hover:bg-red-100 hover:text-red-700 w-full text-left rounded-md transition cursor-pointer"
                 >
                   <ArrowRightStartOnRectangleIcon
@@ -201,11 +189,6 @@ function handleLogout() {
                   link.to
                 )}`"
               >
-                <component
-                  v-if="link.icon"
-                  :is="link.icon"
-                  class="w-5 h-5 inline-block mr-1"
-                />
                 {{ link.label }}
               </NavbarItem>
             </li>
@@ -228,7 +211,7 @@ function handleLogout() {
             </li>
             <li>
               <button
-                @click="showLogoutConfirmationDialog"
+                @click="showLogoutConfirmation = true"
                 class="block px-3 py-2 rounded-md font-medium transition text-red-600 hover:bg-red-100 hover:text-red-700 cursor-pointer"
               >
                 <ArrowRightStartOnRectangleIcon

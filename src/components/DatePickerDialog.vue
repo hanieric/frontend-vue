@@ -1,5 +1,5 @@
 <template>
-  <div
+  <VueFinalModal
     v-if="modelValue"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
     @click.self="close"
@@ -9,20 +9,7 @@
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-semibold">Select Date</h2>
         <button @click="close" class="text-gray-400 hover:text-gray-600">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <XMarkIcon class="h-6 w-6" />
         </button>
       </div>
 
@@ -32,42 +19,61 @@
           @click="goToPreviousMonth"
           class="p-2 rounded-full hover:bg-gray-200 text-gray-600"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
+          <ChevronLeftIcon class="h-5 w-5" />
         </button>
-        <span class="font-semibold text-lg text-gray-800">
-          {{ monthNames[currentMonth] }} {{ currentYear }}
-        </span>
+        <div class="flex items-center gap-2">
+          <!-- Month Dropdown -->
+          <span
+            id="monthDropdown"
+            class="font-semibold text-lg text-gray-800 cursor-pointer select-none relative p-2"
+            @click="showMonthDropdown = !showMonthDropdown"
+          >
+            {{ monthNames[currentMonth] }}
+            <div
+              v-if="showMonthDropdown"
+              class="absolute left-0 top-full mt-1 z-10 bg-white border rounded shadow w-32 max-h-60 overflow-y-auto"
+              style="scrollbar-width: none"
+            >
+              <div
+                v-for="(month, idx) in monthNames"
+                :key="month"
+                @click.stop="selectMonth(idx)"
+                class="px-4 py-2 hover:bg-blue-100 cursor-pointer"
+                :class="{ 'bg-blue-600 text-white': idx === currentMonth }"
+              >
+                {{ month }}
+              </div>
+            </div>
+          </span>
+          <!-- Year Dropdown -->
+          <span
+            id="yearDropdown"
+            class="font-semibold text-lg text-gray-800 cursor-pointer select-none relative p-2"
+            @click="showYearDropdown = !showYearDropdown"
+          >
+            {{ currentYear }}
+            <div
+              v-if="showYearDropdown"
+              class="absolute left-0 top-full mt-1 z-10 bg-white border rounded shadow w-32 max-h-60 overflow-y-auto"
+              style="scrollbar-width: none"
+            >
+              <div
+                v-for="year in yearOptions"
+                :key="year"
+                @click.stop="selectYear(year)"
+                class="px-4 py-2 hover:bg-blue-100 cursor-pointer"
+                :class="{ 'bg-blue-600 text-white': year === currentYear }"
+              >
+                {{ year }}
+              </div>
+            </div>
+          </span>
+        </div>
         <button
           @click="goToNextMonth"
           class="p-2 rounded-full hover:bg-gray-200 text-gray-600"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+          <ChevronRightIcon class="h-5 w-5" />
         </button>
       </div>
 
@@ -117,11 +123,16 @@
         </button>
       </div>
     </div>
-  </div>
+  </VueFinalModal>
 </template>
 
 <script setup>
 import { ref, watch, computed } from "vue";
+import {
+  XMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/vue/24/outline";
 
 const props = defineProps({
   modelValue: { type: Boolean, required: true }, // Controls modal visibility
@@ -291,6 +302,87 @@ function selectDay(day) {
   }
 }
 
+// Month and year dropdown visibility
+const showMonthDropdown = ref(false);
+const showYearDropdown = ref(false);
+
+// Generate year options for the dropdown (e.g., 10 years before and after current year)
+const yearOptions = computed(() => {
+  const startYear = currentYear.value - 10;
+  const endYear = currentYear.value;
+  const years = [];
+  for (let year = startYear; year <= endYear; year++) {
+    years.push(year);
+  }
+  return years;
+});
+
+// Handle month selection from the dropdown
+function selectMonth(monthIndex) {
+  currentMonth.value = monthIndex;
+  showMonthDropdown.value = false; // Close dropdown after selection
+}
+
+// Handle year selection from the dropdown
+function selectYear(year) {
+  currentYear.value = year;
+  showYearDropdown.value = false; // Close dropdown after selection
+}
+
+import { onMounted, onBeforeUnmount } from "vue";
+
+function handleClickOutside(event) {
+  const monthDropdown = document.getElementById("monthDropdown");
+  const yearDropdown = document.getElementById("yearDropdown");
+  if (
+    showMonthDropdown.value &&
+    monthDropdown &&
+    !monthDropdown.contains(event.target)
+  ) {
+    showMonthDropdown.value = false;
+  }
+  if (
+    showYearDropdown.value &&
+    yearDropdown &&
+    !yearDropdown.contains(event.target)
+  ) {
+    showYearDropdown.value = false;
+  }
+}
+
+import { nextTick } from "vue";
+import { VueFinalModal } from "vue-final-modal";
+
+// Scroll to selected month/year when dropdown opens
+watch(showMonthDropdown, async (val) => {
+  if (val) {
+    await nextTick();
+    const dropdown = document.querySelector("#monthDropdown .absolute");
+    const selected = dropdown?.querySelector(".bg-blue-600");
+    if (selected && dropdown) {
+      dropdown.scrollTop = selected.offsetTop - dropdown.offsetTop;
+    }
+  }
+});
+
+watch(showYearDropdown, async (val) => {
+  if (val) {
+    await nextTick();
+    const dropdown = document.querySelector("#yearDropdown .absolute");
+    const selected = dropdown?.querySelector(".bg-blue-600");
+    if (selected && dropdown) {
+      dropdown.scrollTop = selected.offsetTop - dropdown.offsetTop;
+    }
+  }
+});
+
+onMounted(() => {
+  document.addEventListener("mousedown", handleClickOutside);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener("mousedown", handleClickOutside);
+});
+
 // Modal control functions (from your original code)
 function close() {
   selectedDate.value = new Date(props.value || today); // Reset to initial value
@@ -302,17 +394,9 @@ function close() {
 }
 
 function confirm() {
-  console.log("Selected Date:", selectedDate.value);
   // Emit the selected date as an ISO string
-  emits("update:value", selectedDate.value.toISOString().split("T")[0]);
-  emits("confirm", selectedDate.value.toISOString().split("T")[0]);
+  emits("update:value", selectedDate.value.toISOString());
+  emits("confirm", selectedDate.value.toISOString());
   emits("update:modelValue", false);
 }
 </script>
-
-<style scoped>
-/* Optional: Basic styling for days that are not part of the current month, to make them slightly less prominent */
-.text-gray-400 {
-  color: #a0aec0; /* Tailwind gray-400 */
-}
-</style>

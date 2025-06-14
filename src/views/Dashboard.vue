@@ -1,7 +1,28 @@
-<script setup></script>
+<script setup>
+import AddTransactionDialog from "./AddTransactionDialog.vue";
+import { ref, watch } from "vue";
+import { useToast } from "vue-toastification";
+
+const toast = useToast();
+const showAddTransactionDialog = ref(false);
+
+watch(showAddTransactionDialog, (val) => {
+  console.log("Dialog visibility changed:", val);
+});
+</script>
 
 <template>
-  <div class="p-8 w-full max-w-7xl">
+  <div class="flex flex-col p-8 w-full max-w-7xl">
+    <AddTransactionDialog
+      v-model="showAddTransactionDialog"
+      @cancel="showAddTransactionDialog = false"
+    />
+    <button
+      class="mb-4 self-end px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+      @click="showAddTransactionDialog = true"
+    >
+      Add Transaction
+    </button>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <!-- Transaction Record -->
       <div

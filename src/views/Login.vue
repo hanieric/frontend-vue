@@ -57,61 +57,46 @@ const handleLogin = async () => {
 };
 </script>
 <template>
-  <div class="flex items-center justify-center bg-gray-100">
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-      <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
-        Masuk ke Akun
-      </h3>
+  <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+      Masuk ke Akun
+    </h3>
 
-      <form @submit.prevent="handleLogin">
-        <div class="mb-4">
-          <label for="inputNama" class="block text-gray-600 font-medium mb-2"
-            >Nama</label
-          >
-          <input
-            type="text"
-            id="inputNama"
-            v-model="inputNama"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Masukkan nama kamu"
-          />
-        </div>
-        <div class="mb-6">
-          <label
-            for="inputPassword"
-            class="block text-gray-600 font-medium mb-2"
-            >Password</label
-          >
-          <input
-            type="password"
-            id="inputPassword"
-            v-model="inputPassword"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Masukkan password"
-          />
-        </div>
-        <button
-          :disabled="isLoading"
-          type="submit"
-          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition mt-8 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 flex justify-center items-center"
+    <form @submit.prevent="handleLogin">
+      <div class="mb-4">
+        <label for="inputNama" class="block text-gray-600 font-medium mb-2"
+          >Nama</label
         >
-          Masuk
-          <div v-if="isLoading" class="w-10">
-            <LoadingIndicator class="ml-4" />
-          </div>
-        </button>
-      </form>
-    </div>
+        <input
+          type="text"
+          id="inputNama"
+          v-model="inputNama"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Masukkan nama kamu"
+        />
+      </div>
+      <div class="mb-6">
+        <label for="inputPassword" class="block text-gray-600 font-medium mb-2"
+          >Password</label
+        >
+        <input
+          type="password"
+          id="inputPassword"
+          v-model="inputPassword"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Masukkan password"
+        />
+      </div>
+      <button
+        :disabled="isLoading"
+        type="submit"
+        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition mt-8 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 flex justify-center items-center"
+      >
+        Masuk
+        <div v-if="isLoading" class="w-10">
+          <LoadingIndicator class="ml-4" />
+        </div>
+      </button>
+    </form>
   </div>
 </template>
-
-<style scoped>
-.masuk {
-  max-width: 400px;
-  margin: auto;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-</style>
