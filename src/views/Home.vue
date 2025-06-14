@@ -1,38 +1,56 @@
+<script setup>
+import { useAuthStore } from "../store/auth";
+import { useRouter } from "vue-router";
+
+const authStore = useAuthStore();
+const router = useRouter();
+
+const handleGetStarted = () => {
+  if (authStore.isAuthenticated) {
+    // Redirect to dashboard if already authenticated
+    router.push("/dashboard");
+  } else {
+    // Redirect to login page if not authenticated
+    router.push("/login");
+  }
+};
+</script>
+
 <template>
   <div
-    class="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-green-50"
+    class="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-green-50 w-screen"
   >
     <header
-      class="bg-white shadow-lg py-10 flex flex-col items-center relative"
+      class="bg-white shadow-lg py-10 flex flex-col items-center relative px-8"
     >
       <img
         src="@/assets/logo.png"
         alt="HANIERICK Logo"
-        class="w-16 h-16 mb-4 animate-bounce"
+        class="w-32 h-32 mb-4 animate-bounce"
       />
       <h1
         class="text-5xl font-extrabold text-blue-700 mb-2 tracking-tight drop-shadow"
       >
         HANIERICK
       </h1>
-      <p class="text-xl text-gray-700 mb-4 font-medium">
+      <p class="text-xl text-gray-700 mb-8 font-medium">
         The Smart Expense & Income Tracker
       </p>
       <p class="text-lg text-gray-500 mb-6 max-w-xl text-center">
         Take control of your finances. Track your expenses, manage your income,
         and visualize your financial health—all in one place.
       </p>
-      <router-link
-        to="/signup"
-        class="px-8 py-3 bg-gradient-to-r from-blue-600 to-green-500 text-white rounded-lg shadow-lg hover:from-blue-700 hover:to-green-600 transition font-semibold text-lg"
+      <button
+        @click="handleGetStarted"
+        class="px-8 py-3 bg-gradient-to-r from-blue-600 to-green-500 text-white rounded-lg shadow-lg hover:from-blue-700 hover:to-green-600 transition font-semibold text-lg mt-8 cursor-pointer hover:scale-105 transform duration-300"
       >
-        Get Started Free
-      </router-link>
+        Get Started
+      </button>
       <span class="absolute top-4 right-8 text-sm text-gray-400 font-mono"
         >v1.0</span
       >
     </header>
-    <div class="max-w-7xl mx-auto px-4">
+    <div class="max-w-7xl mx-auto px-8">
       <section
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 flex-1 py-16 justify-center items-stretch"
       >

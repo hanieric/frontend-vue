@@ -6,7 +6,6 @@ import Dashboard from "../views/Dashboard.vue";
 import Save from "../views/Save.vue";
 import Show from "../views/Show.vue";
 import Erase from "../views/Erase.vue";
-import Logout from "../views/Logout.vue";
 import Chat from "../views/Chat.vue";
 
 const router = createRouter({
@@ -19,8 +18,7 @@ const router = createRouter({
     { path: "/dashboard/save", name: "save", component: Save },
     { path: "/dashboard/show", name: "show", component: Show },
     { path: "/dashboard/erase", name: "erase", component: Erase },
-    { path: "/dashboard/logout", name: "logout", component: Logout },
-    { path: "/dashboard/chat", name: "chat", component: Chat },
+    { path: "/dashboard/console", name: "console", component: Chat },
   ],
 });
 
