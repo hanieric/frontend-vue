@@ -1,27 +1,46 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
-import Login from '../views/Login.vue'
-import SignIn from '../views/Sign_IN.vue'
-import Dashboard from '../views/Dashboard.vue'
-import Save from '../views/Save.vue'
-import Show from '../views/Show.vue'
-import Erase from '../views/Erase.vue'
-import Logout from '../views/Logout.vue'
-import Chat from '../views/Chat.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import Home from "../views/HomePage.vue";
+import Login from "../views/LoginPage.vue";
+import Register from "../views/RegisterPage.vue";
+import Dashboard from "../views/DashboardPage.vue";
+import HistoryPage from "../views/HistoryPage.vue";
+import ConsolePage from "../views/ConsolePage.vue";
+import { useAuthStore } from "@/store/auth";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'home', component: Home },
-    { path: '/register', name: 'signin', component: SignIn },
-    { path: '/login', name: 'login', component: Login },
-    { path: '/dashboard', name: 'dashboard', component: Dashboard },
-    { path: '/dashboard/save', name: 'save', component: Save },
-    { path: '/dashboard/show', name: 'show', component: Show },
-    { path: '/dashboard/erase', name: 'erase', component: Erase },
-    { path: '/dashboard/logout', name: 'logout', component: Logout },
-    { path: '/dashboard/chat', name: 'chat', component: Chat },
-  ]
-})
+    // Unauthenticated routes
+    { path: "/", name: "home", component: Home },
+    { path: "/register", name: "register", component: Register },
+    { path: "/login", name: "login", component: Login },
 
-export default router
+    // Authenticated routes
+    { path: "/dashboard", name: "dashboard", component: Dashboard },
+    { path: "/dashboard/history", name: "history", component: HistoryPage },
+    { path: "/dashboard/console", name: "console", component: ConsolePage },
+  ],
+});
+
+router.beforeEach((to, from, next) => {
+  const authstore = useAuthStore();
+  // Check if the user is authenticated
+  const isAuthenticated = authstore.isAuthenticated;
+
+  const publicPages = ["/", "/register", "/login"];
+  const authRequired = !publicPages.includes(to.path);
+
+  if (authRequired && !isAuthenticated) {
+    // Redirect to login if trying to access a protected route
+    next({ name: "login" });
+  }
+
+  if (!authRequired && isAuthenticated) {
+    // Redirect to dashboard if already authenticated and trying to access public pages
+    next({ name: "dashboard" });
+  }
+
+  next();
+});
+
+export default router;

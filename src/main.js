@@ -1,15 +1,30 @@
-import './assets/main.css'
+import "./assets/main.css";
 
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import { createApp } from "vue";
+import { createPinia } from "pinia";
+import { createVfm } from "vue-final-modal";
 
-import App from './App.vue'
-import router from './router'
+import App from "./App.vue";
+import router from "./router";
 
-const app = createApp(App)
+import Toast from "vue-toastification";
+import "vue-toastification/dist/index.css";
 
-app.use(createPinia())
-app.use(router)
+const app = createApp(App);
 
-app.mount('#app')
+const options = {
+  position: "bottom-right",
+  timeout: 3000,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  progress: false,
+};
 
+app.use(createVfm());
+app.use(Toast, options);
+
+app.use(createPinia());
+app.use(router);
+
+app.mount("#app");
