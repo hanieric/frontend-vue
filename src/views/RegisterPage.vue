@@ -43,7 +43,7 @@ const handleRegister = async () => {
 </script>
 
 <template>
-  <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+  <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
     <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
       Daftar Akun
     </h3>

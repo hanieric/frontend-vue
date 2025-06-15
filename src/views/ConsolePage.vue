@@ -1,10 +1,16 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import io from "socket.io-client";
-import { ChatBubbleOvalLeftIcon } from "@heroicons/vue/24/outline";
+import {
+  ChatBubbleOvalLeftIcon,
+  PaperAirplaneIcon,
+} from "@heroicons/vue/24/outline";
 import { useAuthStore } from "@/store/auth";
+import axiosInstance from "@/lib/axios_instance";
 
 const store = useAuthStore();
+
+const onlineState = ref(false);
 
 const username = ref(store.user ? store.user.username : "Guest");
 
@@ -12,35 +18,74 @@ const message = ref("");
 const messages = ref([]);
 let socket;
 
-onMounted(() => {
-  socket = io("http://localhost:3001");
+const fetchChatHistory = async () => {
+  try {
+    const response = await axiosInstance.get("/chat");
 
-  socket.on("message", (data) => {
-    if (username !== data.username) {
-      messages.value.push({
-        text: `${data.username}: ${data.text}`,
-        sentByUser: false,
-      });
-    }
+    messages.value = response.data.map((chat) => ({
+      text: chat.message,
+      sentByUser: store.user.userId === chat["user_id"],
+      username: chat.username,
+      timestamp: chat.timestamp,
+    }));
+  } catch (error) {
+    console.error("Error fetching chat history:", error);
+  }
+};
+
+const connectSocket = () => {
+  socket = io(import.meta.env.VITE_WEBSOCKET_URL, {
+    transports: ["websocket"],
+    auth: {
+      token: store.token,
+    },
   });
-});
+
+  socket.on("connect", () => {
+    console.log("Connected to chat server");
+    onlineState.value = true;
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Disconnected from chat server");
+    onlineState.value = false;
+  });
+};
 
 const sendMessage = () => {
-  const chatMessage = { username: username, text: message.value };
-  console.log(username);
-  const MSG = `${chatMessage.username}: ${chatMessage.text}`;
-  messages.value.push({ text: MSG, sentByUser: true });
-  socket.emit("message", chatMessage);
+  if (message.value.trim() === "") return;
+
+  const msg = {
+    text: message.value,
+    sentByUser: true,
+    timestamp: new Date().toISOString(),
+  };
+
+  console.log("Sending message:", msg);
+  if (!socket || !socket.connected) {
+    console.error("Socket is not connected");
+    onlineState.value = false;
+
+    return;
+  }
+
+  socket.emit("message", msg);
+  messages.value.push(msg);
   message.value = "";
 };
+
+onMounted(() => {
+  connectSocket();
+  fetchChatHistory();
+});
 </script>
 
 <template>
-  <div class="flex flex-col items-center bg-gray-100 py-8 max-w-xl w-full">
+  <div class="flex flex-col items-center py-8 max-w-xl w-full">
     <div
-      class="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 flex flex-col h-[70vh]"
+      class="w-full max-w-2xl bg-white rounded-lg shadow-lg py-6 pl-6 flex flex-col h-[70vh]"
     >
-      <div class="flex items-center mb-4">
+      <div class="flex items-center mb-4 pr-6">
         <span
           class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-500 text-white font-bold mr-3"
         >
@@ -56,9 +101,17 @@ const sendMessage = () => {
             >chat as {{ username }}!
           </p>
         </div>
-        <span class="ml-auto text-sm text-gray-400">Online</span>
+        <span
+          class="ml-auto flex items-center text-sm"
+          :class="onlineState ? 'text-green-500' : 'text-red-500'"
+        >
+          <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+            <circle cx="4" cy="4" r="4" />
+          </svg>
+          {{ onlineState ? "Online" : "Offline" }}
+        </span>
       </div>
-      <div class="flex-1 overflow-y-auto mb-4 px-2">
+      <div class="flex-1 overflow-y-auto mb-4 px-2 pr-6">
         <ul>
           <li
             v-for="(msg, index) in messages"
@@ -76,12 +129,41 @@ const sendMessage = () => {
                   : 'bg-gray-200 text-gray-800 rounded-lg px-4 py-2 max-w-xs break-words shadow'
               "
             >
+              <div
+                v-if="msg.timestamp || (!msg.sentByUser && msg.username)"
+                class="text-xs mb-1 flex items-center gap-2"
+              >
+                <span
+                  v-if="!msg.sentByUser && msg.username"
+                  class="font-semibold text-gray-600"
+                >
+                  {{ msg.username }}
+                </span>
+                <span
+                  v-if="msg.timestamp"
+                  :class="msg.sentByUser ? 'text-gray-300' : 'text-gray-500'"
+                >
+                  {{
+                    new Date(msg.timestamp).toLocaleTimeString([], {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  }}
+                </span>
+              </div>
               {{ msg.text }}
             </div>
           </li>
         </ul>
       </div>
-      <form class="flex gap-2" @submit.prevent="sendMessage" autocomplete="off">
+      <form
+        class="flex gap-2 pr-6"
+        @submit.prevent="sendMessage"
+        autocomplete="off"
+      >
         <input
           v-model="message"
           type="text"
@@ -96,6 +178,7 @@ const sendMessage = () => {
           :disabled="!message.trim()"
         >
           Send
+          <PaperAirplaneIcon class="w-5 h-5 inline-block ml-1" />
         </button>
       </form>
     </div>

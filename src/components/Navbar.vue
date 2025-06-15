@@ -1,11 +1,10 @@
 <script setup>
-import { ref, computed, watch } from "vue";
-import { useRoute, useRouter, RouterLink } from "vue-router";
+import { ref, computed } from "vue";
+import { useRouter, RouterLink } from "vue-router";
 import { useAuthStore } from "../store/auth";
 import {
   ChatBubbleLeftIcon,
   DocumentTextIcon,
-  PlusCircleIcon,
   ArrowRightStartOnRectangleIcon,
   KeyIcon,
   UserPlusIcon,
@@ -15,7 +14,6 @@ import {
 import NavbarItem from "./NavbarItem.vue";
 import { useToast } from "vue-toastification";
 
-const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const toast = useToast();
@@ -33,18 +31,7 @@ const authLinks = [
   { to: "/dashboard/console", label: "CONSOLE", icon: ChatBubbleLeftIcon },
 ];
 
-const classNames = {
-  active: "text-blue-600 font-bold border-b-2 border-blue-600",
-  inactive: "text-gray-700 hover:text-blue-600",
-};
-
-const currentRoute = computed(() => route.fullPath);
-
 const isAuthenticated = computed(() => authStore.isAuthenticated);
-
-function isActive(path) {
-  return currentRoute.value === path ? classNames.active : classNames.inactive;
-}
 
 // Menu Click Outside Logic
 
@@ -77,6 +64,9 @@ function handleLogout() {
   router.push("/");
   toast.success("You have successfully logged out.");
 }
+
+const logoutClass =
+  "block px-3 py-2 text-red-600 hover:bg-red-100 hover:text-red-700 w-full text-left rounded-md transition cursor-pointer flex items-center gap-2";
 </script>
 
 <template>
@@ -118,20 +108,11 @@ function handleLogout() {
                 :key="link.to"
                 class="border-b border-gray-50 mb-2 last:mb-0"
               >
-                <RouterLink
+                <NavbarItem
                   :to="link.to"
-                  :class="`block px-4 py-2 ${isActive(
-                    link.to
-                  )} hover:bg-blue-50 hover:text-blue-700 transition rounded-md `"
-                  @click="showMenu = false"
-                >
-                  <component
-                    v-if="link.icon"
-                    :is="link.icon"
-                    class="w-5 h-5 inline-block mr-1"
-                  />
-                  {{ link.label }}
-                </RouterLink>
+                  :icon="link.icon"
+                  :label="link.label"
+                />
               </li>
             </template>
             <template v-else>
@@ -140,20 +121,12 @@ function handleLogout() {
                 :key="link.to"
                 class="border-b border-gray-50 mb-2 last:mb-0"
               >
-                <RouterLink
+                <NavbarItem
                   :to="link.to"
-                  :class="`block px-4 py-2 ${isActive(
-                    link.to
-                  )} hover:bg-blue-50 hover:text-blue-700 transition rounded-md`"
-                  @click="showMenu = false"
-                >
-                  <component
-                    v-if="link.icon"
-                    :is="link.icon"
-                    class="w-5 h-5 inline-block mr-4"
-                  />
-                  {{ link.label }}
-                </RouterLink>
+                  :icon="link.icon"
+                  :label="link.label"
+                  :is-mobile="true"
+                />
               </li>
               <li>
                 <button
@@ -161,10 +134,10 @@ function handleLogout() {
                     showLogoutConfirmation = true;
                     showMenu = false;
                   "
-                  class="block px-4 py-2 text-red-600 hover:bg-red-100 hover:text-red-700 w-full text-left rounded-md transition cursor-pointer"
+                  :class="logoutClass"
                 >
                   <ArrowRightStartOnRectangleIcon
-                    class="w-5 h-5 inline-block mr-4"
+                    class="w-5 h-5 inline-block"
                   />
                   LOGOUT
                 </button>
@@ -183,40 +156,19 @@ function handleLogout() {
         >
           <template v-if="!isAuthenticated">
             <li v-for="link in guestLinks" :key="link.to">
-              <NavbarItem
-                :to="link.to"
-                :class="`block px-3 py-2 rounded-md font-medium transition ${isActive(
-                  link.to
-                )}`"
-              >
-                {{ link.label }}
-              </NavbarItem>
+              <NavbarItem :to="link.to" :icon="link.icon" :label="link.label" />
             </li>
           </template>
           <template v-else>
             <li v-for="link in authLinks" :key="link.to">
-              <RouterLink
-                :to="link.to"
-                :class="`block px-3 py-2 rounded-md font-medium transition ${isActive(
-                  link.to
-                )}`"
-              >
-                <component
-                  v-if="link.icon"
-                  :is="link.icon"
-                  class="w-5 h-5 inline-block lg:hidden"
-                />
-                <span class="hidden lg:inline">{{ link.label }}</span>
-              </RouterLink>
+              <NavbarItem :to="link.to" :icon="link.icon" :label="link.label" />
             </li>
             <li>
               <button
                 @click="showLogoutConfirmation = true"
-                class="block px-3 py-2 rounded-md font-medium transition text-red-600 hover:bg-red-100 hover:text-red-700 cursor-pointer"
+                :class="logoutClass"
               >
-                <ArrowRightStartOnRectangleIcon
-                  class="w-5 h-5 inline-block mr-1 lg:hidden"
-                />
+                <ArrowRightStartOnRectangleIcon class="w-5 h-5 inline-block" />
                 <span class="hidden lg:inline">LOGOUT</span>
               </button>
             </li>
