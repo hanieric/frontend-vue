@@ -112,6 +112,7 @@ const logoutClass =
                   :to="link.to"
                   :icon="link.icon"
                   :label="link.label"
+                  :is-mobile="true"
                 />
               </li>
             </template>
