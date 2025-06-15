@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import io from "socket.io-client";
 import {
   ChatBubbleOvalLeftIcon,
@@ -28,6 +28,8 @@ const fetchChatHistory = async () => {
       username: chat.username,
       timestamp: chat.timestamp,
     }));
+
+    scrollDown();
   } catch (error) {
     console.error("Error fetching chat history:", error);
   }
@@ -72,6 +74,17 @@ const sendMessage = () => {
   socket.emit("message", msg);
   messages.value.push(msg);
   message.value = "";
+
+  scrollDown();
+};
+
+const scrollDown = async () => {
+  // Scrolls the chat container to the bottom
+  await nextTick();
+  const chatContainer = document.querySelector(".overflow-y-auto");
+  if (chatContainer) {
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
 };
 
 onMounted(() => {
