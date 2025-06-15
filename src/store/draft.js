@@ -28,7 +28,6 @@ export const useDraftStore = defineStore("draft", {
   }),
   actions: {
     updateDraft({ keterangan, jumlah, tipe, date }) {
-      console.log("Updating draft:", { keterangan, jumlah, tipe, date });
       this.draft = { keterangan, jumlah, tipe, date };
       saveDraft(this.draft);
     },

@@ -1,10 +1,10 @@
 <template>
   <VueFinalModal
-    v-if="modelValue"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    v-model="isOpen"
+    class="fixed inset-0 flex items-center justify-center bg-black/40"
     @click.self="close"
   >
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-sm p-6 relative">
+    <div class="bg-white rounded-lg shadow-lg w-screen max-w-md p-6 relative">
       <!-- Modal Header -->
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-semibold">Select Date</h2>
@@ -138,6 +138,32 @@ const props = defineProps({
   modelValue: { type: Boolean, required: true }, // Controls modal visibility
   value: { type: Date, default: "" }, // ISO date string for initial/current selection
 });
+
+const isOpen = ref(props.modelValue); // Local state for modal visibility
+
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    isOpen.value = newValue; // Sync local state with prop
+  }
+);
+
+// Modal control functions (from your original code)
+function close() {
+  selectedDate.value = new Date(props.value || today); // Reset to initial value
+  currentMonth.value = selectedDate.value.getMonth();
+  currentYear.value = selectedDate.value.getFullYear();
+
+  emits("update:modelValue", false);
+  emits("cancel");
+}
+
+function confirm() {
+  // Emit the selected date as an ISO string
+  emits("update:value", selectedDate.value.toISOString());
+  emits("confirm", selectedDate.value.toISOString());
+  emits("update:modelValue", false);
+}
 
 const emits = defineEmits([
   "update:modelValue", // For v-model:modelValue (visibility)
@@ -382,21 +408,4 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener("mousedown", handleClickOutside);
 });
-
-// Modal control functions (from your original code)
-function close() {
-  selectedDate.value = new Date(props.value || today); // Reset to initial value
-  currentMonth.value = selectedDate.value.getMonth();
-  currentYear.value = selectedDate.value.getFullYear();
-
-  emits("update:modelValue", false);
-  emits("cancel");
-}
-
-function confirm() {
-  // Emit the selected date as an ISO string
-  emits("update:value", selectedDate.value.toISOString());
-  emits("confirm", selectedDate.value.toISOString());
-  emits("update:modelValue", false);
-}
 </script>

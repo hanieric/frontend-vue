@@ -4,13 +4,13 @@ import { useRoute, useRouter, RouterLink } from "vue-router";
 import { useAuthStore } from "../store/auth";
 import {
   ChatBubbleLeftIcon,
-  TrashIcon,
   DocumentTextIcon,
   PlusCircleIcon,
   ArrowRightStartOnRectangleIcon,
   KeyIcon,
   UserPlusIcon,
   Bars3Icon,
+  ChartBarIcon,
 } from "@heroicons/vue/24/outline";
 import NavbarItem from "./NavbarItem.vue";
 import { useToast } from "vue-toastification";
@@ -28,9 +28,8 @@ const guestLinks = [
 ];
 
 const authLinks = [
-  { to: "/dashboard/save", label: "ADD TRANSACTION", icon: PlusCircleIcon },
-  { to: "/dashboard/erase", label: "DELETE", icon: TrashIcon },
-  { to: "/dashboard/show", label: "HISTORY", icon: DocumentTextIcon },
+  { to: "/dashboard", label: "DASHBOARD", icon: ChartBarIcon },
+  { to: "/dashboard/history", label: "HISTORY", icon: DocumentTextIcon },
   { to: "/dashboard/console", label: "CONSOLE", icon: ChatBubbleLeftIcon },
 ];
 
@@ -72,6 +71,7 @@ onBeforeUnmount(() => {
 const showLogoutConfirmation = ref(false);
 
 function handleLogout() {
+  localStorage.clear();
   authStore.logout();
   showMenu.value = false;
   router.push("/");
