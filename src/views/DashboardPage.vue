@@ -22,6 +22,16 @@ const dailyIncome = ref([]);
 const dailyExpenseTotal = ref(0);
 const dailyIncomeTotal = ref(0);
 
+const isToday = (date) => {
+  const today = new Date();
+  const d = new Date(date);
+  return (
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate()
+  );
+};
+
 const fetchData = async () => {
   try {
     const today = new Date();
@@ -55,21 +65,9 @@ const fetchData = async () => {
 
     income.value = groupByDate(incomeData, "tanggal", "jumlah_pemasukan");
 
-    const todayStr = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    )
-      .toISOString()
-      .slice(0, 10); // 'YYYY-MM-DD'
+    dailyExpense.value = expenseData.filter((item) => isToday(item.tanggal));
 
-    dailyExpense.value = expenseData.filter(
-      (item) => item.tanggal.slice(0, 10) === todayStr
-    );
-
-    dailyIncome.value = incomeData.filter(
-      (item) => item.tanggal.slice(0, 10) === todayStr
-    );
+    dailyIncome.value = incomeData.filter((item) => isToday(item.tanggal));
 
     dailyExpenseTotal.value = dailyExpense.value.reduce(
       (sum, item) => sum + Number(item.jumlah_pengeluaran),
