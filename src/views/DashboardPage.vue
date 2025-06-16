@@ -22,13 +22,14 @@ const dailyIncome = ref([]);
 const dailyExpenseTotal = ref(0);
 const dailyIncomeTotal = ref(0);
 
-const isToday = (date) => {
-  const today = new Date();
-  const d = new Date(date);
+const isSameDay = (date, date2) => {
+  // Check if two dates are the same day (ignoring time)
+  const d1 = new Date(date);
+  const d2 = new Date(date2 || new Date());
   return (
-    d.getFullYear() === today.getFullYear() &&
-    d.getMonth() === today.getMonth() &&
-    d.getDate() === today.getDate()
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
   );
 };
 
@@ -61,13 +62,17 @@ const fetchData = async () => {
     const expenseData = data.expense || [];
     const incomeData = data.income || [];
 
-    expense.value = groupByDate(expenseData, "tanggal", "jumlah_pengeluaran");
+    expense.value = groupByDate(expenseData, "jumlah_pengeluaran");
 
-    income.value = groupByDate(incomeData, "tanggal", "jumlah_pemasukan");
+    income.value = groupByDate(incomeData, "jumlah_pemasukan");
 
-    dailyExpense.value = expenseData.filter((item) => isToday(item.tanggal));
+    dailyExpense.value = expenseData.filter((item) =>
+      isSameDay(item.tanggal, today)
+    );
 
-    dailyIncome.value = incomeData.filter((item) => isToday(item.tanggal));
+    dailyIncome.value = incomeData.filter((item) =>
+      isSameDay(item.tanggal, today)
+    );
 
     dailyExpenseTotal.value = dailyExpense.value.reduce(
       (sum, item) => sum + Number(item.jumlah_pengeluaran),
@@ -78,26 +83,15 @@ const fetchData = async () => {
       (sum, item) => sum + Number(item.jumlah_pemasukan),
       0
     );
-
-    console.log({
-      expense_total: expense_total.value,
-      income_total: income_total.value,
-      expense: expense.value,
-      income: income.value,
-      dailyExpense: dailyExpense.value,
-      dailyIncome: dailyIncome.value,
-      dailyExpenseTotal: dailyExpenseTotal.value,
-      dailyIncomeTotal: dailyIncomeTotal.value,
-    });
   } catch (error) {
     console.error("Error fetching transactions:", error);
   }
 };
 
-const groupByDate = (items, dateKey) => {
+const groupByDate = (items) => {
   // Groups items by date (YYYY-MM-DD), value is an array of items for that date
   return items.reduce((acc, item) => {
-    const date = new Date(item[dateKey]).toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    const date = new Date(item.tanggal).toISOString().slice(0, 10); // 'YYYY-MM-DD'
     if (!acc[date]) {
       acc[date] = [];
     }
