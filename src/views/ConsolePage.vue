@@ -90,7 +90,11 @@ const sendMessage = () => {
 
   socket.emit("message", msg);
 
+  message.value = ""; // Clear the input field
+
   scrollDown();
+
+  focusInput();
 };
 
 const scrollDown = async () => {
@@ -99,6 +103,14 @@ const scrollDown = async () => {
   const chatContainer = document.querySelector(".overflow-y-auto");
   if (chatContainer) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+};
+
+const focusInput = () => {
+  // Focuses the input field when the component is mounted
+  const inputField = document.querySelector("input[type='text']");
+  if (inputField) {
+    inputField.focus();
   }
 };
 
@@ -201,7 +213,6 @@ onUnmounted(() => {
           type="text"
           placeholder="Type a message..."
           class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          @keyup.enter="sendMessage"
           maxlength="200"
         />
         <button
