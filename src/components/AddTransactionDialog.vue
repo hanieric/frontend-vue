@@ -111,7 +111,7 @@ const handlePost = async () => {
   setLoad(true);
 
   try {
-    const response = await axiosInstance.post(
+    await axiosInstance.post(
       `/create/${data.tipe == "pengeluaran" ? "expense" : "income"}`,
       data
     );

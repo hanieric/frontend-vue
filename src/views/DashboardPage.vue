@@ -10,23 +10,31 @@ watch(showAddTransactionDialog, (val) => {
   console.log("Dialog visibility changed:", val);
 });
 
-const expense = ref([]);
-const income = ref([]);
+const expense = ref({});
+const income = ref({});
+
 const expense_total = ref(0);
 const income_total = ref(0);
+
+const dailyExpense = ref([]);
+const dailyIncome = ref([]);
+
+const dailyExpenseTotal = ref(0);
+const dailyIncomeTotal = ref(0);
 
 const fetchData = async () => {
   try {
     const today = new Date();
-    const startDate = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    );
+
     const endDate = new Date(
       today.getFullYear(),
       today.getMonth(),
       today.getDate() + 1
+    );
+    const startDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() - 29
     );
 
     const response = await axiosInstance.get("/history", {
@@ -37,13 +45,154 @@ const fetchData = async () => {
     });
     const data = response.data;
 
-    expense.value = data.expense || [];
-    income.value = data.income || [];
     expense_total.value = data.expense_total || 0;
     income_total.value = data.income_total || 0;
+
+    const expenseData = data.expense || [];
+    const incomeData = data.income || [];
+
+    expense.value = groupByDate(expenseData, "tanggal", "jumlah_pengeluaran");
+
+    income.value = groupByDate(incomeData, "tanggal", "jumlah_pemasukan");
+
+    const todayStr = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    )
+      .toISOString()
+      .slice(0, 10); // 'YYYY-MM-DD'
+
+    dailyExpense.value = expenseData.filter(
+      (item) => item.tanggal.slice(0, 10) === todayStr
+    );
+
+    dailyIncome.value = incomeData.filter(
+      (item) => item.tanggal.slice(0, 10) === todayStr
+    );
+
+    dailyExpenseTotal.value = dailyExpense.value.reduce(
+      (sum, item) => sum + Number(item.jumlah_pengeluaran),
+      0
+    );
+
+    dailyIncomeTotal.value = dailyIncome.value.reduce(
+      (sum, item) => sum + Number(item.jumlah_pemasukan),
+      0
+    );
+
+    console.log({
+      expense_total: expense_total.value,
+      income_total: income_total.value,
+      expense: expense.value,
+      income: income.value,
+      dailyExpense: dailyExpense.value,
+      dailyIncome: dailyIncome.value,
+      dailyExpenseTotal: dailyExpenseTotal.value,
+      dailyIncomeTotal: dailyIncomeTotal.value,
+    });
   } catch (error) {
     console.error("Error fetching transactions:", error);
   }
+};
+
+const groupByDate = (items, dateKey) => {
+  // Groups items by date (YYYY-MM-DD), value is an array of items for that date
+  return items.reduce((acc, item) => {
+    const date = new Date(item[dateKey]).toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(item);
+    return acc;
+  }, {});
+};
+
+import { computed } from "vue";
+import { Line } from "vue-chartjs";
+import {
+  Chart,
+  LineElement,
+  PointElement,
+  LinearScale,
+  Title,
+  CategoryScale,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+Chart.register(
+  LineElement,
+  PointElement,
+  LinearScale,
+  Title,
+  CategoryScale,
+  Tooltip,
+  Legend
+);
+
+// Prepare chart data
+const chartData = computed(() => {
+  const dates = Object.keys(expense.value).sort();
+  return {
+    labels: dates,
+    datasets: [
+      {
+        label: "Total Expense",
+        data: dates.map((date) =>
+          expense.value[date].reduce(
+            (sum, item) => sum + Number(item.jumlah_pengeluaran),
+            0
+          )
+        ),
+        fill: false,
+        borderColor: "#ef4444",
+        backgroundColor: "#ef4444",
+        tension: 0.3,
+      },
+    ],
+  };
+});
+
+const chartOptions = {
+  responsive: true,
+  plugins: {
+    legend: { display: false },
+    title: { display: false },
+    tooltip: { mode: "index", intersect: false },
+  },
+  scales: {
+    x: { title: { display: true, text: "Date" } },
+    y: {
+      title: { display: true, text: "Total Expense" },
+      beginAtZero: true,
+    },
+  },
+};
+
+import { Pie } from "vue-chartjs";
+import { ArcElement } from "chart.js";
+
+Chart.register(ArcElement);
+
+const expenseIncomePieData = computed(() => ({
+  labels: ["Expense", "Income"],
+  datasets: [
+    {
+      data: [expense_total.value, income_total.value],
+      backgroundColor: ["#ef4444", "#22c55e"],
+      borderWidth: 1,
+    },
+  ],
+}));
+
+const expenseIncomePieOptions = {
+  responsive: true,
+  plugins: {
+    legend: { display: true, position: "bottom" },
+    title: { display: false },
+    tooltip: { enabled: true },
+  },
 };
 
 onMounted(() => {
@@ -52,7 +201,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col p-8 w-full max-w-7xl">
+  <div class="flex flex-col p-8 w-full max-w-7xl h-full">
     <AddTransactionDialog
       v-model="showAddTransactionDialog"
       @cancel="showAddTransactionDialog = false"
@@ -67,7 +216,7 @@ onMounted(() => {
     <div
       class="bg-white rounded-2xl shadow-lg flex flex-col max-h-[400px] py-6 pl-6 overflow-hidden mb-8"
     >
-      <h2 class="mb-4 text-xl font-semibold text-gray-800">
+      <h2 class="mb-8 text-xl font-semibold text-gray-800">
         Daily Transactions : {{ new Date().toLocaleDateString() }}
       </h2>
       <div
@@ -75,20 +224,20 @@ onMounted(() => {
       >
         <div class="flex-1 pr-6 md:p-0">
           <h3
-            class="text-lg font-semibold text-red-500 mb-2 flex items-center gap-2"
+            class="text-lg font-semibold text-red-500 mb-4 flex items-center gap-2"
           >
             <ArrowUpTrayIcon class="w-5 h-5 inline text-red-500" />
             Expenses
             <span class="ml-auto text-sm text-gray-400 font-normal"
-              >Total:
+              >-
               <span class="font-bold text-red-500"
-                >Rp{{ Number(expense_total).toLocaleString() }}</span
+                >Rp{{ Number(dailyExpenseTotal).toLocaleString() }}</span
               ></span
             >
           </h3>
           <ul class="list-none p-0 m-0 divide-y divide-gray-100">
             <li
-              v-for="item in expense"
+              v-for="item in dailyExpense"
               :key="'expense-' + item.id"
               class="flex justify-between py-2 items-center"
             >
@@ -106,7 +255,10 @@ onMounted(() => {
                 }}</span
               >
             </li>
-            <li v-if="!expense.length" class="py-2 text-gray-400 text-center">
+            <li
+              v-if="!dailyExpense.length"
+              class="py-2 text-gray-400 text-center"
+            >
               No expenses
             </li>
           </ul>
@@ -114,20 +266,20 @@ onMounted(() => {
         <div class="w-px bg-gray-200 mx-4 hidden md:block" />
         <div class="flex-1 pr-6">
           <h3
-            class="text-lg font-semibold text-green-600 mb-2 flex items-center gap-2"
+            class="text-lg font-semibold text-green-600 mb-4 flex items-center gap-2"
           >
             <ArrowDownTrayIcon class="w-5 h-5 inline text-green-600" />
             Incomes
             <span class="ml-auto text-sm text-gray-400 font-normal"
-              >Total:
+              >+
               <span class="font-bold text-green-600"
-                >Rp{{ Number(income_total).toLocaleString() }}</span
+                >Rp{{ Number(dailyIncomeTotal).toLocaleString() }}</span
               ></span
             >
           </h3>
           <ul class="list-none p-0 m-0 divide-y divide-gray-100">
             <li
-              v-for="item in income"
+              v-for="item in dailyIncome"
               :key="'income-' + item.id"
               class="flex justify-between py-2 items-center"
             >
@@ -143,32 +295,71 @@ onMounted(() => {
                 >+ Rp{{ Number(item.jumlah_pemasukan).toLocaleString() }}</span
               >
             </li>
-            <li v-if="!income.length" class="py-2 text-gray-400 text-center">
+            <li
+              v-if="!dailyIncome.length"
+              class="py-2 text-gray-400 text-center"
+            >
               No incomes
             </li>
           </ul>
         </div>
       </div>
     </div>
-    <div class="flex flex-col md:flex-row gap-8 mb-8">
-      <div
-        class="bg-white rounded-2xl shadow-lg p-6 flex flex-col min-h-[250px] flex-2"
-      >
-        <h2 class="mb-4 text-xl font-semibold text-gray-800">Graphic 1</h2>
-        <div
-          class="flex-1 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-lg border-2 border-dashed border-gray-200"
+    <div class="flex flex-col xl:flex-row gap-8 mb-8">
+      <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-col flex-2">
+        <h2
+          class="mb-4 text-xl font-semibold text-gray-800 flex items-center gap-2"
         >
-          [ Chart Placeholder ]
+          <span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+          Expense Trend (Last 30 Days)
+        </h2>
+        <div
+          class="relative flex-1 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center min-h-[250px]"
+        >
+          <Line
+            :data="chartData"
+            :options="chartOptions"
+            class="w-full h-full"
+          />
+        </div>
+        <div class="mt-4 flex justify-between text-sm text-gray-500">
+          <span>
+            <span class="font-semibold">Total Expense:</span>
+            Rp{{ Number(expense_total).toLocaleString() }}
+          </span>
+          <span>
+            <span class="font-semibold">Days:</span>
+            {{ chartData.labels.length }}
+          </span>
         </div>
       </div>
-      <div
-        class="bg-white rounded-2xl shadow-lg p-6 flex flex-col min-h-[250px] flex-1"
-      >
-        <h2 class="mb-4 text-xl font-semibold text-gray-800">Graphic 2</h2>
+
+      <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-col flex-1">
+        <h2 class="mb-4 text-xl font-semibold text-gray-800">
+          Expense vs Income (This Month)
+        </h2>
         <div
-          class="flex-1 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-lg border-2 border-dashed border-gray-200"
+          class="flex items-center justify-center flex-1 bg-gray-50 rounded-xl border border-gray-200"
         >
-          [ Chart Placeholder ]
+          <div
+            class="aspect-square w-full max-w-xs mx-auto p-4 flex items-center justify-center"
+          >
+            <Pie
+              :data="expenseIncomePieData"
+              :options="expenseIncomePieOptions"
+              class="w-full h-full"
+            />
+          </div>
+        </div>
+        <div class="mt-4 flex justify-between text-sm text-gray-500">
+          <span>
+            <span class="font-semibold">Total Expense:</span>
+            Rp{{ Number(expense_total).toLocaleString() }}
+          </span>
+          <span>
+            <span class="font-semibold">Total Income:</span>
+            Rp{{ Number(income_total).toLocaleString() }}
+          </span>
         </div>
       </div>
     </div>
