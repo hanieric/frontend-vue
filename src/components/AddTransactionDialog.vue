@@ -43,7 +43,7 @@ const handleTransform = (value) => {
     return value;
   }
 
-  if (value.length == 2 && value[1] !== ".") {
+  if (value.length == 2 && value[1] !== "." && value[0] === "0") {
     value = value.replace("0", "");
     return value;
   }
