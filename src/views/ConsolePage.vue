@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, onMounted, nextTick, onUnmounted } from "vue";
 import io from "socket.io-client";
 import {
   ChatBubbleOvalLeftIcon,
@@ -44,14 +44,31 @@ const connectSocket = () => {
   });
 
   socket.on("connect", () => {
-    console.log("Connected to chat server");
+    console.log("Connected to WebSocket server");
     onlineState.value = true;
   });
 
   socket.on("disconnect", () => {
-    console.log("Disconnected from chat server");
+    console.log("Disconnected from WebSocket server");
     onlineState.value = false;
   });
+
+  socket.on("message", (msg) => {
+    messages.value.push({
+      text: msg.text,
+      sentByUser: store.user.userId === msg["user_id"],
+      username: msg.username || "Unknown",
+      timestamp: msg.timestamp,
+    });
+    scrollDown();
+  });
+};
+
+const disconnectSocket = () => {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
 };
 
 const sendMessage = () => {
@@ -72,8 +89,6 @@ const sendMessage = () => {
   }
 
   socket.emit("message", msg);
-  messages.value.push(msg);
-  message.value = "";
 
   scrollDown();
 };
@@ -90,6 +105,10 @@ const scrollDown = async () => {
 onMounted(() => {
   connectSocket();
   fetchChatHistory();
+});
+
+onUnmounted(() => {
+  disconnectSocket();
 });
 </script>
 
