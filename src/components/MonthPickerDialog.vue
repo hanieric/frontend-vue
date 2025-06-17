@@ -1,110 +1,111 @@
 <script setup>
-import { VueFinalModal } from "vue-final-modal";
-import { ref, watch } from "vue";
+  import { VueFinalModal } from "vue-final-modal";
+  import { ref, watch } from "vue";
 
-const props = defineProps({
-  modelValue: Boolean,
-  value: Date,
-});
+  const props = defineProps({
+    modelValue: Boolean,
+    value: Date,
+  });
 
-const emit = defineEmits(["update:modelValue", "selectMonth"]);
+  const emit = defineEmits(["update:modelValue", "selectMonth"]);
 
-const year = ref(new Date().getFullYear());
-const monthNames = [
-  "Januari",
-  "Februari",
-  "Maret",
-  "April",
-  "Mei",
-  "Juni",
-  "Juli",
-  "Agustus",
-  "September",
-  "Oktober",
-  "November",
-  "Desember",
-];
+  const year = ref(new Date().getFullYear());
+  const monthNames = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
 
-const today = new Date();
+  const today = new Date();
 
-// selectedDate now stores both year and month
-const selectedDate = ref(
-  props.value
-    ? { year: props.value.getFullYear(), month: props.value.getMonth() }
-    : { year: today.getFullYear(), month: today.getMonth() }
-);
-
-const isSelectedMonth = (month) => {
-  return (
-    month === selectedDate.value.month && year.value === selectedDate.value.year
+  // selectedDate now stores both year and month
+  const selectedDate = ref(
+    props.value
+      ? { year: props.value.getFullYear(), month: props.value.getMonth() }
+      : { year: today.getFullYear(), month: today.getMonth() }
   );
-};
 
-const isToday = (month) => {
-  return month === today.getMonth() && year.value === today.getFullYear();
-};
+  const isSelectedMonth = (month) => {
+    return (
+      month === selectedDate.value.month &&
+      year.value === selectedDate.value.year
+    );
+  };
 
-const showMonthPicker = ref(false);
+  const isToday = (month) => {
+    return month === today.getMonth() && year.value === today.getFullYear();
+  };
 
-showMonthPicker.value = props.modelValue;
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    showMonthPicker.value = newValue;
-    if (newValue) {
-      year.value = today.getFullYear();
-      selectedDate.value = props.value
-        ? { year: props.value.getFullYear(), month: props.value.getMonth() }
-        : { year: today.getFullYear(), month: today.getMonth() };
+  const showMonthPicker = ref(false);
+
+  showMonthPicker.value = props.modelValue;
+  watch(
+    () => props.modelValue,
+    (newValue) => {
+      showMonthPicker.value = newValue;
+      if (newValue) {
+        year.value = today.getFullYear();
+        selectedDate.value = props.value
+          ? { year: props.value.getFullYear(), month: props.value.getMonth() }
+          : { year: today.getFullYear(), month: today.getMonth() };
+      }
     }
-  }
-);
+  );
 
-watch(
-  () => showMonthPicker.value,
-  (newValue) => {
-    if (!newValue) {
-      emit("update:modelValue", false);
+  watch(
+    () => showMonthPicker.value,
+    (newValue) => {
+      if (!newValue) {
+        emit("update:modelValue", false);
+      }
     }
-  }
-);
+  );
 
-watch(
-  () => props.value,
-  (newValue) => {
-    if (newValue) {
-      year.value = newValue.getFullYear();
-      selectedDate.value = {
-        year: newValue.getFullYear(),
-        month: newValue.getMonth(),
-      };
+  watch(
+    () => props.value,
+    (newValue) => {
+      if (newValue) {
+        year.value = newValue.getFullYear();
+        selectedDate.value = {
+          year: newValue.getFullYear(),
+          month: newValue.getMonth(),
+        };
+      }
     }
-  }
-);
+  );
 
-const selectMonth = (month) => {
-  selectedDate.value = { year: year.value, month };
-  const selected = new Date(year.value, month, 1);
-  emit("selectMonth", selected);
-  emit("update:modelValue", false);
-};
+  const selectMonth = (month) => {
+    selectedDate.value = { year: year.value, month };
+    const selected = new Date(year.value, month, 1);
+    emit("selectMonth", selected);
+    emit("update:modelValue", false);
+  };
 
-const prevYear = () => {
-  year.value--;
-};
+  const prevYear = () => {
+    year.value--;
+  };
 
-const nextYear = () => {
-  year.value++;
-};
+  const nextYear = () => {
+    year.value++;
+  };
 
-document.addEventListener("keydown", (event) => {
-  if (!showMonthPicker.value) return;
-  if (event.key === "ArrowLeft") {
-    prevYear();
-  } else if (event.key === "ArrowRight") {
-    nextYear();
-  }
-});
+  document.addEventListener("keydown", (event) => {
+    if (!showMonthPicker.value) return;
+    if (event.key === "ArrowLeft") {
+      prevYear();
+    } else if (event.key === "ArrowRight") {
+      nextYear();
+    }
+  });
 </script>
 
 <template>
@@ -112,7 +113,7 @@ document.addEventListener("keydown", (event) => {
     v-model="showMonthPicker"
     class="fixed inset-0 flex items-center justify-center z-50 bg-black/40"
   >
-    <div class="p-6 bg-white rounded-lg shadow-lg w-96">
+    <div class="p-6 bg-white rounded-lg shadow-lg max-w-sm md:max-w-md">
       <div class="flex items-center justify-between mb-8">
         <button
           @click="prevYear"

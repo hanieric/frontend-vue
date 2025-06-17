@@ -1,49 +1,51 @@
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useToast } from "vue-toastification";
-import useLoading from "../hooks/use_loading.js";
-import LoadingIndicator from "@/components/LoadingIndicator.vue";
-import axiosInstance from "../lib/axios_instance.js";
+  import { ref } from "vue";
+  import { useRouter } from "vue-router";
+  import { useToast } from "vue-toastification";
+  import useLoading from "../hooks/use_loading.js";
+  import LoadingIndicator from "@/components/LoadingIndicator.vue";
+  import axiosInstance from "../lib/axios_instance.js";
 
-const inputNama = ref("");
-const inputPassword = ref("");
+  const inputNama = ref("");
+  const inputPassword = ref("");
 
-const { isLoading, setLoad } = useLoading();
-const toast = useToast();
-const router = useRouter();
+  const { isLoading, setLoad } = useLoading();
+  const toast = useToast();
+  const router = useRouter();
 
-const handleRegister = async () => {
-  const user = {
-    username: inputNama.value,
-    password: inputPassword.value,
+  const handleRegister = async () => {
+    const user = {
+      username: inputNama.value,
+      password: inputPassword.value,
+    };
+
+    if (!user.username || !user.password) {
+      toast.error("Nama dan password harus diisi!");
+      return;
+    }
+
+    setLoad(true);
+
+    try {
+      await axiosInstance.post("/register", user);
+      setLoad(false);
+      toast.success("Berhasil mendaftar! Silakan login.");
+      router.push("/login");
+    } catch (err) {
+      setLoad(false);
+      console.error(err);
+      const errorMessage = err.response
+        ? err.response.data
+        : "Terjadi kesalahan saat mendaftar. Silakan coba lagi.";
+      toast.error(errorMessage);
+    }
   };
-
-  if (!user.username || !user.password) {
-    toast.error("Nama dan password harus diisi!");
-    return;
-  }
-
-  setLoad(true);
-
-  try {
-    await axiosInstance.post("/register", user);
-    setLoad(false);
-    toast.success("Berhasil mendaftar! Silakan login.");
-    router.push("/login");
-  } catch (err) {
-    setLoad(false);
-    console.error(err);
-    const errorMessage = err.response
-      ? err.response.data
-      : "Terjadi kesalahan saat mendaftar. Silakan coba lagi.";
-    toast.error(errorMessage);
-  }
-};
 </script>
 
 <template>
-  <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
+  <div
+    class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm md:max-w-md my-auto"
+  >
     <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
       Daftar Akun
     </h3>

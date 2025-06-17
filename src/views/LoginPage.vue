@@ -1,63 +1,65 @@
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useToast } from "vue-toastification";
-import useLoading from "../hooks/use_loading.js";
-import LoadingIndicator from "@/components/LoadingIndicator.vue";
-import { useAuthStore } from "../store/auth.js";
-import axiosInstance from "../lib/axios_instance.js";
+  import { ref } from "vue";
+  import { useRouter } from "vue-router";
+  import { useToast } from "vue-toastification";
+  import useLoading from "../hooks/use_loading.js";
+  import LoadingIndicator from "@/components/LoadingIndicator.vue";
+  import { useAuthStore } from "../store/auth.js";
+  import axiosInstance from "../lib/axios_instance.js";
 
-const router = useRouter();
+  const router = useRouter();
 
-const inputNama = ref("");
-const inputPassword = ref("");
-const { isLoading, setLoad } = useLoading();
+  const inputNama = ref("");
+  const inputPassword = ref("");
+  const { isLoading, setLoad } = useLoading();
 
-const toast = useToast();
+  const toast = useToast();
 
-const handleLogin = async () => {
-  const user = {
-    username: inputNama.value,
-    password: inputPassword.value,
+  const handleLogin = async () => {
+    const user = {
+      username: inputNama.value,
+      password: inputPassword.value,
+    };
+
+    if (!user.username || !user.password) {
+      toast.error("Nama dan password harus diisi!");
+      return;
+    }
+
+    setLoad(true);
+
+    try {
+      const response = await axiosInstance.post("/login", user);
+
+      setLoad(false);
+
+      console.log(response.data);
+
+      useAuthStore().authenticated(
+        {
+          userId: response.data.userId,
+          username: response.data.username,
+        },
+        response.data.token
+      );
+
+      router.push("/dashboard");
+
+      toast.success("Berhasil masuk ke akun!");
+    } catch (err) {
+      setLoad(false);
+      console.error(err);
+      const errorMessage = err.response
+        ? err.response.data
+        : "Terjadi kesalahan saat masuk. Silakan coba lagi.";
+      toast.error(errorMessage);
+    }
   };
-
-  if (!user.username || !user.password) {
-    toast.error("Nama dan password harus diisi!");
-    return;
-  }
-
-  setLoad(true);
-
-  try {
-    const response = await axiosInstance.post("/login", user);
-
-    setLoad(false);
-
-    console.log(response.data);
-
-    useAuthStore().authenticated(
-      {
-        userId: response.data.userId,
-        username: response.data.username,
-      },
-      response.data.token
-    );
-
-    router.push("/dashboard");
-
-    toast.success("Berhasil masuk ke akun!");
-  } catch (err) {
-    setLoad(false);
-    console.error(err);
-    const errorMessage = err.response
-      ? err.response.data
-      : "Terjadi kesalahan saat masuk. Silakan coba lagi.";
-    toast.error(errorMessage);
-  }
-};
 </script>
 <template>
-  <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
+  <div
+    class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm md:max-w-md my-auto"
+  >
     <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
       Masuk ke Akun
     </h3>

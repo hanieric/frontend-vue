@@ -3,7 +3,7 @@ import Home from "../views/HomePage.vue";
 import Login from "../views/LoginPage.vue";
 import Register from "../views/RegisterPage.vue";
 import Dashboard from "../views/DashboardPage.vue";
-import HistoryPage from "../views/HistoryPage.vue";
+import HistoryPage from "../views/history/HistoryPage.vue";
 import ConsolePage from "../views/ConsolePage.vue";
 import { useAuthStore } from "@/store/auth";
 
