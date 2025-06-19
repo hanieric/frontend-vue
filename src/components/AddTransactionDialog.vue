@@ -18,7 +18,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue", "success"]);
 const show = ref(props.modelValue);
 
 watch(
@@ -58,6 +58,9 @@ const handlePost = async () => {
     draftStore.clearDraft();
 
     toast.success("Transaksi berhasil dibuat!");
+
+    show.value = false;
+    emit("success");
   } catch (error) {
     console.error(error);
     setLoad(false);

@@ -9,10 +9,6 @@ const authStore = useAuthStore();
 
 const showAddTransactionDialog = ref(false);
 
-watch(showAddTransactionDialog, (val) => {
-  console.log("Dialog visibility changed:", val);
-});
-
 const expense = ref({});
 const income = ref({});
 
@@ -199,7 +195,7 @@ onMounted(() => {
   <div class="flex flex-col p-8 w-full max-w-7xl h-full">
     <AddTransactionDialog
       v-model="showAddTransactionDialog"
-      @cancel="showAddTransactionDialog = false"
+      @success="fetchData"
     />
 
     <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
