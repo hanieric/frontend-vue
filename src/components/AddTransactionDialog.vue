@@ -1,146 +1,145 @@
 <script setup>
-  import { ref, watch } from "vue";
-  import { useRouter } from "vue-router";
-  import { useToast } from "vue-toastification";
-  import { useDraftStore } from "../store/draft.js";
-  import axiosInstance from "../lib/axios_instance.js";
-  import { onMounted } from "vue";
-  import { VueFinalModal } from "vue-final-modal";
-  import {
-    ChevronDownIcon,
-    CalendarDateRangeIcon,
-  } from "@heroicons/vue/24/outline";
+import { ref, watch } from "vue";
+import { useToast } from "vue-toastification";
+import { useDraftStore } from "../store/draft.js";
+import axiosInstance from "../lib/axios_instance.js";
+import { onMounted } from "vue";
+import { VueFinalModal } from "vue-final-modal";
+import {
+  ChevronDownIcon,
+  CalendarDateRangeIcon,
+} from "@heroicons/vue/24/outline";
+import { parseToThousand, parseToNumber } from "@/lib/thousand_parser.js";
 
-  const props = defineProps({
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  });
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    required: true,
+  },
+});
 
-  const emit = defineEmits(["update:modelValue"]);
-  const show = ref(props.modelValue);
+const emit = defineEmits(["update:modelValue"]);
+const show = ref(props.modelValue);
 
-  watch(
-    () => props.modelValue,
-    (val) => {
-      show.value = val;
-    }
-  );
+watch(
+  () => props.modelValue,
+  (val) => {
+    show.value = val;
+  }
+);
 
-  watch(show, (val) => {
-    emit("update:modelValue", val);
-  });
+watch(show, (val) => {
+  emit("update:modelValue", val);
+});
 
-  const draftStore = useDraftStore();
-  const { isLoading, setLoad } = useLoading();
+const draftStore = useDraftStore();
+const { isLoading, setLoad } = useLoading();
 
-  const handlePost = async () => {
-    const data = toData();
+const handlePost = async () => {
+  const data = toData();
 
-    if (!data.keterangan || !data.jumlah) {
-      toast.error("Semua field harus diisi!");
-      return;
-    }
-
-    setLoad(true);
-
-    try {
-      await axiosInstance.post(
-        `/create/${data.tipe == "pengeluaran" ? "expense" : "income"}`,
-        data
-      );
-      setLoad(false);
-
-      inputKeterangan.value = "";
-      inputJumlah.value = "0";
-
-      draftStore.clearDraft();
-
-      toast.success("Transaksi berhasil dibuat!");
-    } catch (error) {
-      console.error(error);
-      setLoad(false);
-      if (error.response.data.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error("Terjadi kesalahan. Coba lagi.");
-      }
-    }
-  };
-
-  const toast = useToast();
-
-  const inputKeterangan = ref("");
-  const inputJumlah = ref("0");
-  const inputTipe = ref("pengeluaran");
-  const selectedDate = ref(Date());
-
-  const draft = draftStore.draft;
-  if (draft) {
-    inputKeterangan.value = draft.keterangan;
-    inputJumlah.value = parseToThousand(draft.jumlah.toString());
-    selectedDate.value = draft.date ? new Date(draft.date) : new Date();
-    inputTipe.value = draft.tipe || "pengeluaran";
+  if (!data.keterangan || !data.jumlah) {
+    toast.error("Semua field harus diisi!");
+    return;
   }
 
-  watch(inputJumlah, (newValue) => {
-    inputJumlah.value = parseToThousand(newValue);
-    useDraftStore().updateDraft(toData());
-  });
+  setLoad(true);
 
-  watch(inputKeterangan, (_) => {
-    useDraftStore().updateDraft(toData());
-  });
+  try {
+    await axiosInstance.post(
+      `/create/${data.tipe == "pengeluaran" ? "expense" : "income"}`,
+      data
+    );
+    setLoad(false);
 
-  const toData = () => {
-    return {
-      keterangan: inputKeterangan.value,
-      jumlah: parseToNumber(inputJumlah.value),
-      date: selectedDate.value,
-      tipe: inputTipe.value,
-    };
+    inputKeterangan.value = "";
+    inputJumlah.value = "0";
+
+    draftStore.clearDraft();
+
+    toast.success("Transaksi berhasil dibuat!");
+  } catch (error) {
+    console.error(error);
+    setLoad(false);
+    if (error.response.data.message) {
+      toast.error(error.response.data.message);
+    } else {
+      toast.error("Terjadi kesalahan. Coba lagi.");
+    }
+  }
+};
+
+const toast = useToast();
+
+const inputKeterangan = ref("");
+const inputJumlah = ref("0");
+const inputTipe = ref("pengeluaran");
+const selectedDate = ref(Date());
+
+const draft = draftStore.draft;
+if (draft) {
+  inputKeterangan.value = draft.keterangan;
+  inputJumlah.value = parseToThousand(draft.jumlah.toString());
+  selectedDate.value = draft.date ? new Date(draft.date) : new Date();
+  inputTipe.value = draft.tipe || "pengeluaran";
+}
+
+watch(inputJumlah, (newValue) => {
+  inputJumlah.value = parseToThousand(newValue);
+  useDraftStore().updateDraft(toData());
+});
+
+watch(inputKeterangan, (_) => {
+  useDraftStore().updateDraft(toData());
+});
+
+const toData = () => {
+  return {
+    keterangan: inputKeterangan.value,
+    jumlah: parseToNumber(inputJumlah.value),
+    date: selectedDate.value,
+    tipe: inputTipe.value,
   };
+};
 
-  // Tipe pengeluaran
-  const showTipeMenu = ref(false);
+// Tipe pengeluaran
+const showTipeMenu = ref(false);
 
-  watch(inputTipe, (_) => {
-    useDraftStore().updateDraft(toData());
-  });
+watch(inputTipe, (_) => {
+  useDraftStore().updateDraft(toData());
+});
 
-  onMounted(() => {
-    document.addEventListener("click", (e) => {
-      const tipeMenu = document.getElementById("inputTipe");
-      if (showTipeMenu.value && tipeMenu && !tipeMenu.contains(e.target)) {
-        showTipeMenu.value = false;
-      }
-    });
-  });
-
-  import { nextTick } from "vue";
-  import DatePickerDialog from "@/components/DatePickerDialog.vue";
-  import useLoading from "@/hooks/use_loading.js";
-  import { parseToThousand } from "@/lib/thousand_parser.js";
-
-  watch(showTipeMenu, async (val) => {
-    if (val) {
-      await nextTick();
-      // Focus the first menu item when popup opens
-      const firstMenuItem = document.getElementById("pengeluaran");
-      if (firstMenuItem) {
-        firstMenuItem.focus();
-      }
+onMounted(() => {
+  document.addEventListener("click", (e) => {
+    const tipeMenu = document.getElementById("inputTipe");
+    if (showTipeMenu.value && tipeMenu && !tipeMenu.contains(e.target)) {
+      showTipeMenu.value = false;
     }
   });
+});
 
-  // Date Picker Dialog
-  const showDatePicker = ref(false);
+import { nextTick } from "vue";
+import DatePickerDialog from "@/components/DatePickerDialog.vue";
+import useLoading from "@/hooks/use_loading.js";
 
-  const handleDateConfirm = (date) => {
-    selectedDate.value = new Date(date);
-    useDraftStore().updateDraft(toData());
-  };
+watch(showTipeMenu, async (val) => {
+  if (val) {
+    await nextTick();
+    // Focus the first menu item when popup opens
+    const firstMenuItem = document.getElementById("pengeluaran");
+    if (firstMenuItem) {
+      firstMenuItem.focus();
+    }
+  }
+});
+
+// Date Picker Dialog
+const showDatePicker = ref(false);
+
+const handleDateConfirm = (date) => {
+  selectedDate.value = new Date(date);
+  useDraftStore().updateDraft(toData());
+};
 </script>
 
 <template>
