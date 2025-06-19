@@ -9,9 +9,11 @@ import { useAuthStore } from "@/store/auth";
 import axiosInstance from "@/lib/axios_instance";
 import { useToast } from "vue-toastification";
 import ListChat from "@/components/ListChat.vue";
+import useLoading from "@/hooks/use_loading";
 
 const store = useAuthStore();
 const toast = useToast();
+const { isLoading, setLoad } = useLoading();
 
 const onlineState = ref(false);
 
@@ -22,18 +24,42 @@ const messages = ref([]);
 let socket;
 
 const fetchChatHistory = async () => {
-  try {
-    const response = await axiosInstance.get("/chat");
+  if (isLoading.value) return; // Prevent multiple fetches
 
-    messages.value = response.data.map((chat) => ({
+  if (messages.value.length > 0) {
+    for (const lastMessage of messages.value) {
+      if (lastMessage.id == 1) return;
+
+      if (new Date() - new Date(lastMessage.timestamp) >= 24 * 60 * 60 * 1000)
+        return;
+    }
+  }
+  setLoad(true);
+  try {
+    const response = await axiosInstance.get("/chat", {
+      params: {
+        lastId: messages.value.length > 0 ? messages.value[0].id : null,
+        count: 20,
+      },
+    });
+
+    const parsedMessage = response.data.map((chat) => ({
+      id: chat.chat_id,
       text: chat.message,
       sentByUser: store.user.userId === chat["user_id"],
       username: chat.username,
       timestamp: chat.timestamp,
     }));
 
-    scrollDown();
+    const newArray = [...parsedMessage, ...messages.value];
+    newArray.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    messages.value = newArray;
+
+    setLoad(false);
   } catch (error) {
+    setLoad(false);
+    toast.error("Failed to fetch chat history. Please try again later.");
     console.error("Error fetching chat history:", error);
   }
 };
@@ -63,6 +89,8 @@ const connectSocket = () => {
       username: msg.username || "Unknown",
       timestamp: msg.timestamp,
     });
+
+    toast.clear("sending-message");
     scrollDown();
   });
 };
@@ -83,7 +111,10 @@ const sendMessage = () => {
     timestamp: new Date().toISOString(),
   };
 
-  console.log("Sending message:", msg);
+  toast.info("Sending message...", {
+    id: "sending-message",
+  });
+
   if (!socket || !socket.connected) {
     console.error("Socket is not connected");
     toast.error("Cannot send message, please check your connection.");
@@ -104,18 +135,17 @@ const sendMessage = () => {
 const scrollDown = async () => {
   // Scrolls the chat container to the bottom
   await nextTick();
-  const chatContainer = document.querySelector(".overflow-y-auto");
-  if (chatContainer) {
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-  }
+  const chatContainer = document.querySelectorAll("#chat-container");
+  chatContainer.forEach((container) => {
+    container.scrollTop = container.scrollHeight;
+  });
+  focusInput();
 };
 
 const focusInput = () => {
   // Focuses the input field when the component is mounted
-  const inputField = document.querySelector("input[type='text']");
-  if (inputField) {
-    inputField.focus();
-  }
+  const messageInputs = document.querySelectorAll("#message-input");
+  messageInputs.forEach((input) => input.focus());
 };
 
 onMounted(() => {
@@ -159,7 +189,13 @@ onUnmounted(() => {
       </span>
     </div>
 
-    <ListChat :messages="messages" class="bg-white/80 py-4 pl-4" />
+    <ListChat
+      id="chat-container"
+      :messages="messages"
+      class="bg-white/80 py-4 pl-4"
+      @loadMore="fetchChatHistory"
+      :isLoading="isLoading"
+    />
 
     <form
       class="flex gap-2 px-4 w-screen bg-white py-4 border-t border-gray-200"
@@ -167,6 +203,7 @@ onUnmounted(() => {
       autocomplete="off"
     >
       <input
+        id="message-input"
         v-model="message"
         type="text"
         placeholder="Type a message..."
@@ -216,7 +253,13 @@ onUnmounted(() => {
           {{ onlineState ? "Online" : "Offline" }}
         </span>
       </div>
-      <ListChat :messages="messages" class="" />
+      <ListChat
+        id="chat-container"
+        class="py-4"
+        :messages="messages"
+        @loadMore="fetchChatHistory"
+        :isLoading="isLoading"
+      />
       <form
         class="flex gap-2 w-full border-t border-gray-200 px-6 py-4"
         @submit.prevent="sendMessage"
