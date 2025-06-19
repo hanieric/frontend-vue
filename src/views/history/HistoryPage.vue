@@ -21,90 +21,86 @@
     @update:show="showEditDialog = $event"
     @submit="fetchData"
   />
-  <div
-    class="mx-auto max-w-7xl flex flex-col py-8 mb-16 gap-8 px-6 overflow-y-auto"
-  >
-    <div class="flex flex-col gap-4">
-      <div
-        class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded flex items-center justify-between"
-      >
-        <span>
-          Data yang ditampilkan adalah untuk bulan
-          <strong>{{ formatMonth(selectedMonth) }}</strong>
-        </span>
-        <button
-          class="ml-4 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded transition"
-          @click="showMonthPicker = true"
+  <div class="w-screen px-6 overflow-y-auto">
+    <div class="max-w-7xl mx-auto w-full flex flex-col py-8 gap-8">
+      <div class="flex flex-col gap-4 w-full">
+        <div
+          class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded flex items-center justify-between"
         >
-          Ganti Bulan
+          <span>
+            Data yang ditampilkan adalah untuk bulan
+            <strong>{{ formatMonth(selectedMonth) }}</strong>
+          </span>
+          <button
+            class="ml-4 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded transition"
+            @click="showMonthPicker = true"
+          >
+            Ganti Bulan
+          </button>
+        </div>
+      </div>
+      <div
+        v-if="hasError"
+        class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded flex items-center justify-between"
+      >
+        <span> Terjadi kesalahan saat mengambil data. Silakan coba lagi. </span>
+        <button
+          class="ml-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition"
+          @click="fetchData"
+        >
+          Coba Lagi
         </button>
       </div>
-    </div>
-
-    <div
-      v-if="hasError"
-      class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded flex items-center justify-between"
-    >
-      <span> Terjadi kesalahan saat mengambil data. Silakan coba lagi. </span>
-      <button
-        class="ml-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition"
-        @click="fetchData"
-      >
-        Coba Lagi
-      </button>
-    </div>
-    <div>
-      <!-- Loading shimmer -->
-      <div v-if="isLoading" class="space-y-4">
-        <div class="animate-pulse">
-          <!-- Header shimmer -->
-          <div class="flex justify-between items-center mb-6">
-            <div class="h-6 bg-gray-300 rounded w-32"></div>
-            <div class="h-6 bg-gray-300 rounded w-24"></div>
-          </div>
-
-          <!-- Table/Card shimmer -->
-          <div class="space-y-3">
-            <div
-              v-for="i in 5"
-              :key="i"
-              class="flex justify-between items-center p-4 bg-gray-100 rounded"
-            >
-              <div class="flex-1 space-y-2">
-                <div class="h-4 bg-gray-300 rounded w-3/4"></div>
-                <div class="h-3 bg-gray-300 rounded w-1/2"></div>
+      <div>
+        <!-- Loading shimmer -->
+        <div v-if="isLoading" class="space-y-4">
+          <div class="animate-pulse">
+            <!-- Header shimmer -->
+            <div class="flex justify-between items-center mb-6">
+              <div class="h-6 bg-gray-300 rounded w-32"></div>
+              <div class="h-6 bg-gray-300 rounded w-24"></div>
+            </div>
+            <!-- Table/Card shimmer -->
+            <div class="space-y-3">
+              <div
+                v-for="i in 5"
+                :key="i"
+                class="flex justify-between items-center p-4 bg-gray-100 rounded"
+              >
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+                  <div class="h-3 bg-gray-300 rounded w-1/2"></div>
+                </div>
+                <div class="h-6 bg-gray-300 rounded w-20"></div>
               </div>
-              <div class="h-6 bg-gray-300 rounded w-20"></div>
             </div>
           </div>
         </div>
+        <!-- Desktop/Tablet: Show Table -->
+        <DekstopTable
+          v-if="!hasError && !isLoading"
+          :income="income"
+          :total-income="totalIncome"
+          :expense="expense"
+          :total-expense="totalExpense"
+          :formatUang="formatUang"
+          :formatTanggal="formatTanggal"
+          @incomeClick="onIncomeClick"
+          @expenseClick="onExpenseClick"
+        />
+        <!-- Mobile: Show Card -->
+        <MobileCard
+          v-if="!hasError && !isLoading"
+          :income="income"
+          :total-income="totalIncome"
+          :expense="expense"
+          :total-expense="totalExpense"
+          :formatUang="formatUang"
+          :formatTanggal="formatTanggal"
+          @incomeClick="onIncomeClick"
+          @expenseClick="onExpenseClick"
+        />
       </div>
-
-      <!-- Desktop/Tablet: Show Table -->
-      <DekstopTable
-        v-if="!hasError && !isLoading"
-        :income="income"
-        :total-income="totalIncome"
-        :expense="expense"
-        :total-expense="totalExpense"
-        :formatUang="formatUang"
-        :formatTanggal="formatTanggal"
-        @incomeClick="onIncomeClick"
-        @expenseClick="onExpenseClick"
-      />
-
-      <!-- Mobile: Show Card -->
-      <MobileCard
-        v-if="!hasError && !isLoading"
-        :income="income"
-        :total-income="totalIncome"
-        :expense="expense"
-        :total-expense="totalExpense"
-        :formatUang="formatUang"
-        :formatTanggal="formatTanggal"
-        @incomeClick="onIncomeClick"
-        @expenseClick="onExpenseClick"
-      />
     </div>
   </div>
 </template>

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex-1 overflow-y-auto mb-4 px-2 pr-6"
+    class="h-full overflow-y-auto px-4 pr-6"
     ref="scrollContainer"
     @scroll="onScroll"
   >
@@ -55,59 +55,60 @@
 </template>
 
 <script setup>
-  import { ref, computed, watch } from "vue";
-  import LoadingIndicator from "./LoadingIndicator.vue";
+import { ref, computed, watch } from "vue";
+import LoadingIndicator from "./LoadingIndicator.vue";
 
-  const props = defineProps({
-    messages: {
-      type: Array,
-      required: true,
-    },
-  });
+const props = defineProps({
+  messages: {
+    type: Array,
+    required: true,
+  },
+});
 
-  const BATCH_SIZE = 30;
-  const loadedCount = ref(BATCH_SIZE);
-  const isLoading = ref(false);
+const BATCH_SIZE = 30;
+const loadedCount = ref(BATCH_SIZE);
+const isLoading = ref(false);
 
-  const visibleMessages = computed(() =>
-    props.messages.slice(-loadedCount.value)
-  );
+const visibleMessages = computed(() =>
+  props.messages.slice(-loadedCount.value)
+);
 
-  const scrollContainer = ref(null);
+const scrollContainer = ref(null);
 
-  function onScroll() {
-    const el = scrollContainer.value;
-    if (!el) return;
-    if (
-      el.scrollTop === 0 &&
-      loadedCount.value < props.messages.length &&
-      !isLoading.value
-    ) {
-      isLoading.value = true;
-      // Record current scroll height before loading more
-      const prevScrollHeight = el.scrollHeight;
+function onScroll() {
+  const el = scrollContainer.value;
+  console.log("onScroll", el.scrollTop, el.scrollHeight, el.clientHeight);
+  if (!el) return;
+  if (
+    el.scrollTop === 0 &&
+    loadedCount.value < props.messages.length &&
+    !isLoading.value
+  ) {
+    isLoading.value = true;
+    // Record current scroll height before loading more
+    const prevScrollHeight = el.scrollHeight;
 
+    setTimeout(() => {
+      // Load more messages after delay
+      loadedCount.value = Math.min(
+        loadedCount.value + BATCH_SIZE,
+        props.messages.length
+      );
+      isLoading.value = false;
+      // Wait for DOM update, then adjust scrollTop to maintain position
       setTimeout(() => {
-        // Load more messages after delay
-        loadedCount.value = Math.min(
-          loadedCount.value + BATCH_SIZE,
-          props.messages.length
-        );
-        isLoading.value = false;
-        // Wait for DOM update, then adjust scrollTop to maintain position
-        setTimeout(() => {
-          const newScrollHeight = el.scrollHeight;
-          el.scrollTop = newScrollHeight - prevScrollHeight;
-        }, 0);
-      }, 1000 + Math.random() * 1000); // 1-2 seconds
-    }
+        const newScrollHeight = el.scrollHeight;
+        el.scrollTop = newScrollHeight - prevScrollHeight;
+      }, 0);
+    }, 1000 + Math.random() * 1000); // 1-2 seconds
   }
+}
 
-  // Reset loadedCount if messages change (e.g., new chat)
-  watch(
-    () => props.messages,
-    () => {
-      loadedCount.value = BATCH_SIZE;
-    }
-  );
+// Reset loadedCount if messages change (e.g., new chat)
+watch(
+  () => props.messages,
+  () => {
+    loadedCount.value = BATCH_SIZE;
+  }
+);
 </script>
