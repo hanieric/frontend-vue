@@ -206,7 +206,7 @@ async function handleEdit() {
   setLoad(true);
 
   try {
-    const response = await axiosInstance.put(
+    await axiosInstance.put(
       `/update/${inputTipe.value == "pemasukan" ? "income" : "expense"}`,
       {
         id: props.id,
@@ -235,6 +235,43 @@ async function handleEdit() {
     });
   } catch (error) {
     console.error("Error updating transaction:", error);
+    isLoading.value = false;
+    return;
+  }
+
+  show.value = false;
+}
+
+async function handleDelete() {
+  setLoad(true);
+
+  try {
+    await axiosInstance.delete(
+      `/delete/${inputTipe.value == "pemasukan" ? "income" : "expense"}`,
+      {
+        data: { id: props.id },
+      }
+    );
+
+    setLoad(false);
+
+    toast.success(
+      `Berhasil menghapus ${
+        inputTipe.value === "pemasukan" ? "pemasukan" : "pengeluaran"
+      }!`
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    emit("submit", {
+      id: props.id,
+      keterangan: inputKeterangan.value,
+      nominal: Number(inputJumlah.value),
+      tipe: inputTipe.value,
+      date: selectedDate.value,
+    });
+  } catch (error) {
+    console.error("Error deleting transaction:", error);
     isLoading.value = false;
     return;
   }
