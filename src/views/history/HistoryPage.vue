@@ -54,9 +54,35 @@
       </button>
     </div>
     <div>
+      <!-- Loading shimmer -->
+      <div v-if="isLoading" class="space-y-4">
+        <div class="animate-pulse">
+          <!-- Header shimmer -->
+          <div class="flex justify-between items-center mb-6">
+            <div class="h-6 bg-gray-300 rounded w-32"></div>
+            <div class="h-6 bg-gray-300 rounded w-24"></div>
+          </div>
+
+          <!-- Table/Card shimmer -->
+          <div class="space-y-3">
+            <div
+              v-for="i in 5"
+              :key="i"
+              class="flex justify-between items-center p-4 bg-gray-100 rounded"
+            >
+              <div class="flex-1 space-y-2">
+                <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+                <div class="h-3 bg-gray-300 rounded w-1/2"></div>
+              </div>
+              <div class="h-6 bg-gray-300 rounded w-20"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Desktop/Tablet: Show Table -->
       <DekstopTable
-        v-if="!showMonthPicker && !hasError"
+        v-if="!hasError && !isLoading"
         :income="income"
         :total-income="totalIncome"
         :expense="expense"
@@ -66,172 +92,123 @@
         @incomeClick="onIncomeClick"
         @expenseClick="onExpenseClick"
       />
+
       <!-- Mobile: Show Card -->
-      <div class="flex flex-col gap-8 md:hidden">
-        <div>
-          <h2 class="text-xl font-bold mb-4 text-gray-800">
-            Riwayat Pemasukan
-          </h2>
-          <div
-            v-for="(item, index) in income"
-            :key="index"
-            @click="onIncomeClick(item)"
-            class="bg-white rounded-lg shadow p-4 mb-4 hover:bg-green-50 cursor-pointer transition"
-          >
-            <div class="font-semibold text-green-700">
-              {{ item.nama_pemasukan }}
-            </div>
-            <div class="text-gray-700">
-              {{ formatUang(item.jumlah_pemasukan) }}
-            </div>
-            <div class="text-gray-500 text-sm">
-              {{ formatTanggal(item.tanggal) }}
-            </div>
-          </div>
-          <div class="total-income mb-8 text-right">
-            <span class="text-base font-semibold text-gray-700"
-              >Total Pemasukan:
-            </span>
-            <span class="text-base font-bold text-green-600">{{
-              formatUang(totalIncome)
-            }}</span>
-          </div>
-        </div>
-        <div>
-          <h2 class="text-xl font-bold mb-4 text-gray-800">
-            Riwayat Pengeluaran
-          </h2>
-          <div
-            v-for="(item, index) in expense"
-            :key="index"
-            @click="onExpenseClick(item)"
-            class="bg-white rounded-lg shadow p-4 mb-4 hover:bg-blue-50 cursor-pointer transition"
-          >
-            <div class="font-semibold text-blue-700">
-              {{ item.nama_pengeluaran }}
-            </div>
-            <div class="text-gray-700">
-              {{ formatUang(item.jumlah_pengeluaran) }}
-            </div>
-            <div class="text-gray-500 text-sm">
-              {{ formatTanggal(item.tanggal) }}
-            </div>
-          </div>
-          <div class="total-expense text-right">
-            <span class="text-base font-semibold text-gray-700"
-              >Total Pengeluaran:
-            </span>
-            <span class="text-base font-bold text-red-600">{{
-              formatUang(totalExpense)
-            }}</span>
-          </div>
-        </div>
-      </div>
+      <MobileCard
+        v-if="!hasError && !isLoading"
+        :income="income"
+        :total-income="totalIncome"
+        :expense="expense"
+        :total-expense="totalExpense"
+        :formatUang="formatUang"
+        :formatTanggal="formatTanggal"
+        @incomeClick="onIncomeClick"
+        @expenseClick="onExpenseClick"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-  import { onMounted, ref } from "vue";
-  import axiosInstance from "../../lib/axios_instance.js";
-  import MonthPickerDialog from "@/components/MonthPickerDialog.vue";
-  import useLoading from "@/hooks/use_loading.js";
-  import DekstopTable from "./components/DekstopTable.vue";
-  import EditTransactionDialog from "./components/EditTransactionDialog.vue";
+import { onMounted, ref } from "vue";
+import axiosInstance from "../../lib/axios_instance.js";
+import MonthPickerDialog from "@/components/MonthPickerDialog.vue";
+import useLoading from "@/hooks/use_loading.js";
+import DekstopTable from "./components/DekstopTable.vue";
+import MobileCard from "./components/MobileCard.vue";
+import EditTransactionDialog from "./components/EditTransactionDialog.vue";
 
-  const income = ref([]);
-  const totalIncome = ref(0);
-  const expense = ref([]);
-  const totalExpense = ref(0);
+const income = ref([]);
+const totalIncome = ref(0);
+const expense = ref([]);
+const totalExpense = ref(0);
 
-  const { isLoading, setLoad } = useLoading();
-  const hasError = ref(false);
+const { isLoading, setLoad } = useLoading();
+const hasError = ref(false);
 
-  const storedMonthLabel = localStorage.getItem("selectedMonthLabel");
-  const selectedMonth = ref(
-    new Date(storedMonthLabel || new Date().toISOString())
-  );
+const storedMonthLabel = localStorage.getItem("selectedMonthLabel");
+const selectedMonth = ref(
+  new Date(storedMonthLabel || new Date().toISOString())
+);
 
-  const fetchData = async () => {
-    setLoad(true);
-    hasError.value = false;
-    try {
-      const selectedMonthDate = selectedMonth.value;
-      const response = await axiosInstance.get("/history", {
-        params: {
-          start_date: new Date(
-            selectedMonthDate.getFullYear(),
-            selectedMonthDate.getMonth(),
-            1
-          ).toISOString(),
+const fetchData = async () => {
+  setLoad(true);
+  hasError.value = false;
+  try {
+    const selectedMonthDate = selectedMonth.value;
+    const response = await axiosInstance.get("/history", {
+      params: {
+        start_date: new Date(
+          selectedMonthDate.getFullYear(),
+          selectedMonthDate.getMonth(),
+          1
+        ).toISOString(),
 
-          end_date: new Date(
-            selectedMonthDate.getFullYear(),
-            selectedMonthDate.getMonth() + 1,
-            0
-          ).toISOString(),
-        },
-      });
-      setLoad(false);
-      const data = response.data;
-      income.value = data.income || [];
-      totalIncome.value = data.income_total || 0;
-      expense.value = data.expense || [];
-      totalExpense.value = data.expense_total || 0;
-    } catch (error) {
-      setLoad(false);
-      hasError.value = true;
-      console.error("Error fetching history:", error);
-    }
-  };
-
-  const formatUang = (value) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-    }).format(value);
-  };
-
-  const formatTanggal = (dateString) => {
-    const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-    return new Date(dateString).toLocaleDateString("id-ID", options);
-  };
-
-  const formatMonth = (date) => {
-    return new Date(date).toLocaleString("id-ID", {
-      month: "long",
-      year: "numeric",
+        end_date: new Date(
+          selectedMonthDate.getFullYear(),
+          selectedMonthDate.getMonth() + 1,
+          0
+        ).toISOString(),
+      },
     });
-  };
+    setLoad(false);
+    const data = response.data;
+    income.value = data.income || [];
+    totalIncome.value = data.income_total || 0;
+    expense.value = data.expense || [];
+    totalExpense.value = data.expense_total || 0;
+  } catch (error) {
+    setLoad(false);
+    hasError.value = true;
+    console.error("Error fetching history:", error);
+  }
+};
 
-  const showMonthPicker = ref(false);
+const formatUang = (value) => {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+  }).format(value);
+};
 
-  const handleMonthChange = (month) => {
-    selectedMonth.value = month;
-    localStorage.setItem("selectedMonthLabel", month.toISOString());
-    fetchData(); // Re-fetch data for the selected month
-  };
+const formatTanggal = (dateString) => {
+  const options = { year: "numeric", month: "2-digit", day: "2-digit" };
+  return new Date(dateString).toLocaleDateString("id-ID", options);
+};
 
-  onMounted(() => {
-    // Fetch data when the component is mounted
-    fetchData();
+const formatMonth = (date) => {
+  return new Date(date).toLocaleString("id-ID", {
+    month: "long",
+    year: "numeric",
   });
+};
 
-  const showEditDialog = ref(false);
-  const selectedTransaction = ref(null);
-  const selectedType = ref("");
+const showMonthPicker = ref(false);
 
-  const onIncomeClick = (item) => {
-    console.log("Income item clicked:", item);
-    selectedTransaction.value = item;
-    showEditDialog.value = true;
-    selectedType.value = "pemasukan";
-  };
+const handleMonthChange = (month) => {
+  selectedMonth.value = month;
+  localStorage.setItem("selectedMonthLabel", month.toISOString());
+  fetchData(); // Re-fetch data for the selected month
+};
 
-  const onExpenseClick = (item) => {
-    console.log("Income item clicked:", item);
-    selectedTransaction.value = item;
-    showEditDialog.value = true;
-    selectedType.value = "pengeluaran";
-  };
+onMounted(() => {
+  // Fetch data when the component is mounted
+  fetchData();
+});
+
+const showEditDialog = ref(false);
+const selectedTransaction = ref(null);
+const selectedType = ref("");
+
+const onIncomeClick = (item) => {
+  selectedTransaction.value = item;
+  showEditDialog.value = true;
+  selectedType.value = "pemasukan";
+};
+
+const onExpenseClick = (item) => {
+  selectedTransaction.value = item;
+  showEditDialog.value = true;
+  selectedType.value = "pengeluaran";
+};
 </script>
