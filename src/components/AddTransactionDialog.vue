@@ -3,12 +3,8 @@ import { ref, watch } from "vue";
 import { useToast } from "vue-toastification";
 import { useDraftStore } from "../store/draft.js";
 import axiosInstance from "../lib/axios_instance.js";
-import { onMounted } from "vue";
 import { VueFinalModal } from "vue-final-modal";
-import {
-  ChevronDownIcon,
-  CalendarDateRangeIcon,
-} from "@heroicons/vue/24/outline";
+import { CalendarDateRangeIcon } from "@heroicons/vue/24/outline";
 import { parseToThousand, parseToNumber } from "@/lib/thousand_parser.js";
 
 const props = defineProps({
@@ -105,36 +101,13 @@ const toData = () => {
   };
 };
 
-// Tipe pengeluaran
-const showTipeMenu = ref(false);
-
 watch(inputTipe, (_) => {
   useDraftStore().updateDraft(toData());
 });
 
-onMounted(() => {
-  document.addEventListener("click", (e) => {
-    const tipeMenu = document.getElementById("inputTipe");
-    if (showTipeMenu.value && tipeMenu && !tipeMenu.contains(e.target)) {
-      showTipeMenu.value = false;
-    }
-  });
-});
-
-import { nextTick } from "vue";
 import DatePickerDialog from "@/components/DatePickerDialog.vue";
 import useLoading from "@/hooks/use_loading.js";
-
-watch(showTipeMenu, async (val) => {
-  if (val) {
-    await nextTick();
-    // Focus the first menu item when popup opens
-    const firstMenuItem = document.getElementById("pengeluaran");
-    if (firstMenuItem) {
-      firstMenuItem.focus();
-    }
-  }
-});
+import TypeDropdown from "./TypeDropdown.vue";
 
 // Date Picker Dialog
 const showDatePicker = ref(false);
@@ -220,71 +193,7 @@ const handleDateConfirm = (date) => {
             />
           </div>
         </div>
-        <div class="mb-6 flex items-center relative">
-          <label
-            for="inputTipe"
-            class="block text-gray-700 font-semibold mr-4 flex-1"
-            >Tipe</label
-          >
-          <div class="flex-2 relative w-full" id="inputTipe">
-            <button
-              type="button"
-              @click="showTipeMenu = !showTipeMenu"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400 transition flex items-center justify-between"
-            >
-              <span>
-                {{ inputTipe === "pemasukan" ? "Pemasukan" : "Pengeluaran" }}
-              </span>
-              <ChevronDownIcon
-                class="h-5 w-5 text-gray-500 ml-2 animate-transform transition-transform duration-200"
-                :class="{
-                  'rotate-180': showTipeMenu,
-                }"
-              />
-            </button>
-            <div
-              v-if="showTipeMenu"
-              class="absolute left-0 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10"
-            >
-              <div
-                tabindex="0"
-                id="pengeluaran"
-                @click="
-                  inputTipe = 'pengeluaran';
-                  showTipeMenu = false;
-                "
-                @keydown.enter.prevent="
-                  inputTipe = 'pengeluaran';
-                  showTipeMenu = false;
-                "
-                class="px-4 py-2 hover:bg-blue-100 cursor-pointer rounded-t-lg focus:bg-blue-200 outline-none"
-                :class="{
-                  'bg-blue-50 font-semibold': inputTipe === 'pengeluaran',
-                }"
-              >
-                Pengeluaran
-              </div>
-              <div
-                tabindex="0"
-                id="pemasukan"
-                @click="
-                  inputTipe = 'pemasukan';
-                  showTipeMenu = false;
-                "
-                @keydown.enter.prevent="
-                  inputTipe = 'pemasukan';
-                  showTipeMenu = false;
-                "
-                class="px-4 py-2 hover:bg-blue-100 cursor-pointer rounded-b-lg focus:bg-blue-200 outline-none"
-                :class="{
-                  'bg-blue-50 font-semibold': inputTipe === 'pemasukan',
-                }"
-              >
-                Pemasukan
-              </div>
-            </div>
-          </div>
-        </div>
+        <TypeDropdown v-model="inputTipe" :showTipeMenu="showTipeMenu" />
         <DatePickerDialog
           v-model="showDatePicker"
           v-model:value="selectedDate"
