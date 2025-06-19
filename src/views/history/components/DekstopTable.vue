@@ -62,7 +62,7 @@
       <h2 class="text-2xl font-bold mb-6 text-gray-800">Riwayat Pengeluaran</h2>
       <div class="overflow-x-auto rounded-lg shadow">
         <table class="min-w-full bg-white divide-y divide-gray-200">
-          <thead class="bg-gray-100">
+          <thead class="bg-red-50">
             <tr>
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -119,14 +119,14 @@
 </template>
 
 <script setup>
-  const props = defineProps({
-    income: Array,
-    totalIncome: Number,
-    expense: Array,
-    totalExpense: Number,
-    formatUang: Function,
-    formatTanggal: Function,
-    onIncomeClick: Function,
-    onExpenseClick: Function,
-  });
+const props = defineProps({
+  income: Array,
+  totalIncome: Number,
+  expense: Array,
+  totalExpense: Number,
+  formatUang: Function,
+  formatTanggal: Function,
+  onIncomeClick: Function,
+  onExpenseClick: Function,
+});
 </script>
