@@ -10,7 +10,9 @@
       >
         <div class="flex items-center justify-between">
           <div class="flex flex-col gap-2">
-            <div class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+            <div
+              class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded w-fit"
+            >
               {{ formatTanggal(item.tanggal) }}
             </div>
             <div class="font-semibold text-gray-800">
@@ -41,7 +43,9 @@
       >
         <div class="flex items-center justify-between">
           <div class="flex flex-col gap-2">
-            <div class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+            <div
+              class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded w-fit"
+            >
               {{ formatTanggal(item.tanggal) }}
             </div>
             <div class="font-semibold text-gray-800">
