@@ -101,7 +101,12 @@
             <span>
               {{
                 selectedDate
-                  ? new Date(selectedDate).toLocaleDateString()
+                  ? selectedDate.toLocaleDateString("id-ID", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
                   : "Pilih Tanggal"
               }}
             </span>
@@ -206,6 +211,12 @@ async function handleEdit() {
   setLoad(true);
 
   try {
+    console.log("Updating transaction with data:", {
+      id: props.id,
+      keterangan: inputKeterangan.value,
+      jumlah: parseToNumber(inputJumlah.value),
+      date: selectedDate.value.toISOString(),
+    });
     await axiosInstance.put(
       `/update/${inputTipe.value == "pemasukan" ? "income" : "expense"}`,
       {
