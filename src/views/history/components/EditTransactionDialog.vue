@@ -258,10 +258,7 @@ async function handleDelete() {
 
   try {
     await axiosInstance.delete(
-      `/delete/${inputTipe.value == "pemasukan" ? "income" : "expense"}`,
-      {
-        data: { id: props.id },
-      }
+      `/delete/${inputTipe.value == "pemasukan" ? "income" : "expense"}/${props.id}`,
     );
 
     setLoad(false);
