@@ -65,7 +65,7 @@ const fetchChatHistory = async () => {
 };
 
 const connectSocket = () => {
-  socket = io(import.meta.env.VITE_WEBSOCKET_URL, {
+  socket = io(import.meta.env.VITE_BASE_URL, {
     transports: ["websocket"],
     auth: {
       token: store.token,
@@ -107,7 +107,6 @@ const sendMessage = () => {
 
   const msg = {
     text: message.value,
-    sentByUser: true,
     timestamp: new Date().toISOString(),
   };
 
