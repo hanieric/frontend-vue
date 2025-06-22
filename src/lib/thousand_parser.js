@@ -1,5 +1,7 @@
 const parseToThousand = (value) => {
   if (!value) return "0";
+
+  value = String(value);
   // Hapus spasi di awal dan akhir
   value = value.trim();
 

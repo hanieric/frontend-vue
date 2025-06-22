@@ -116,6 +116,8 @@ const handleDateConfirm = (date) => {
   selectedDate.value = new Date(date);
   useDraftStore().updateDraft(toData());
 };
+
+const showTipeMenu = ref(false);
 </script>
 
 <template>
