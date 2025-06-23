@@ -153,6 +153,9 @@ const fetchData = async () => {
     totalIncome.value = data.income_total || 0;
     expense.value = data.expense || [];
     totalExpense.value = data.expense_total || 0;
+
+    income.value.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+    expense.value.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
   } catch (error) {
     setLoad(false);
     hasError.value = true;
