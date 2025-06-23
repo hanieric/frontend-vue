@@ -55,51 +55,51 @@
 </template>
 
 <script setup>
-import LoadingIndicator from "./LoadingIndicator.vue";
-import { defineProps, defineEmits, ref, nextTick, onMounted, watch } from "vue";
+  import LoadingIndicator from "./LoadingIndicator.vue";
+  import { ref, nextTick, onMounted, watch } from "vue";
 
-const props = defineProps({
-  messages: {
-    type: Array,
-    required: true,
-  },
-  isLoading: {
-    type: Boolean,
-    default: false,
-  },
-});
+  const props = defineProps({
+    messages: {
+      type: Array,
+      required: true,
+    },
+    isLoading: {
+      type: Boolean,
+      default: false,
+    },
+  });
 
-watch(
-  () => props.messages,
-  async (_) => {
-    // If new messages are added, adjust the scroll position
-    await nextTick();
+  watch(
+    () => props.messages,
+    async (_) => {
+      // If new messages are added, adjust the scroll position
+      await nextTick();
+      const el = scrollContainer.value;
+      if (el) {
+        adjustScrollPosition(el);
+      }
+    },
+    { immediate: true, deep: true }
+  );
+
+  const scrollContainer = ref(null);
+
+  const emit = defineEmits(["loadMore"]);
+
+  let previousScrollHeight = 0;
+  function onScroll() {
     const el = scrollContainer.value;
-    if (el) {
-      adjustScrollPosition(el);
+    if (!el) return;
+    previousScrollHeight = el.scrollHeight;
+    if (el.scrollTop === 0 && props.isLoading === false) {
+      emit("loadMore");
     }
-  },
-  { immediate: true, deep: true }
-);
-
-const scrollContainer = ref(null);
-
-const emit = defineEmits(["loadMore"]);
-
-let previousScrollHeight = 0;
-function onScroll() {
-  const el = scrollContainer.value;
-  if (!el) return;
-  previousScrollHeight = el.scrollHeight;
-  if (el.scrollTop === 0 && props.isLoading === false) {
-    emit("loadMore");
   }
-}
 
-const adjustScrollPosition = async (el) => {
-  const newScrollHeight = el.scrollHeight;
-  const scrollDiff = newScrollHeight - previousScrollHeight;
+  const adjustScrollPosition = async (el) => {
+    const newScrollHeight = el.scrollHeight;
+    const scrollDiff = newScrollHeight - previousScrollHeight;
 
-  el.scrollTop = el.scrollTop + scrollDiff;
-};
+    el.scrollTop = el.scrollTop + scrollDiff;
+  };
 </script>

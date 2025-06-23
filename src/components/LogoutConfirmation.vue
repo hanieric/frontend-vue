@@ -31,37 +31,37 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, defineProps, watch } from "vue";
-import { VueFinalModal } from "vue-final-modal";
+  import { ref, watch } from "vue";
+  import { VueFinalModal } from "vue-final-modal";
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    required: true,
-  },
-});
+  const props = defineProps({
+    modelValue: {
+      type: Boolean,
+      required: true,
+    },
+  });
 
-const emit = defineEmits(["update:modelValue", "confirm"]);
+  const emit = defineEmits(["update:modelValue", "confirm"]);
 
-const show = ref(props.modelValue);
+  const show = ref(props.modelValue);
 
-watch(
-  () => props.modelValue,
-  (val) => {
-    show.value = val;
+  watch(
+    () => props.modelValue,
+    (val) => {
+      show.value = val;
+    }
+  );
+
+  watch(show, (val) => {
+    emit("update:modelValue", val);
+  });
+
+  function cancel() {
+    show.value = false;
   }
-);
 
-watch(show, (val) => {
-  emit("update:modelValue", val);
-});
-
-function cancel() {
-  show.value = false;
-}
-
-function confirm() {
-  emit("confirm");
-  show.value = false;
-}
+  function confirm() {
+    emit("confirm");
+    show.value = false;
+  }
 </script>
