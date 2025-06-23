@@ -1,194 +1,197 @@
 <script setup>
-import AddTransactionDialog from "../components/AddTransactionDialog.vue";
-import { onMounted, ref, watch } from "vue";
-import axiosInstance from "@/lib/axios_instance";
-import { ArrowDownTrayIcon, ArrowUpTrayIcon } from "@heroicons/vue/24/outline";
-import { useAuthStore } from "@/store/auth";
+  import AddTransactionDialog from "../components/AddTransactionDialog.vue";
+  import { onMounted, ref, watch } from "vue";
+  import axiosInstance from "@/lib/axios_instance";
+  import {
+    ArrowDownTrayIcon,
+    ArrowUpTrayIcon,
+  } from "@heroicons/vue/24/outline";
+  import { useAuthStore } from "@/store/auth";
 
-const authStore = useAuthStore();
+  const authStore = useAuthStore();
 
-const showAddTransactionDialog = ref(false);
+  const showAddTransactionDialog = ref(false);
 
-const expense = ref({});
-const income = ref({});
+  const expense = ref({});
+  const income = ref({});
 
-const expense_total = ref(0);
-const income_total = ref(0);
+  const expense_total = ref(0);
+  const income_total = ref(0);
 
-const dailyExpense = ref([]);
-const dailyIncome = ref([]);
+  const dailyExpense = ref([]);
+  const dailyIncome = ref([]);
 
-const dailyExpenseTotal = ref(0);
-const dailyIncomeTotal = ref(0);
+  const dailyExpenseTotal = ref(0);
+  const dailyIncomeTotal = ref(0);
 
-const isSameDay = (date, date2) => {
-  // Check if two dates are the same day (ignoring time)
-  const d1 = new Date(date);
-  const d2 = new Date(date2 || new Date());
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
-};
-
-const fetchData = async () => {
-  try {
-    const today = new Date();
-
-    const endDate = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate() + 1
+  const isSameDay = (date, date2) => {
+    // Check if two dates are the same day (ignoring time)
+    const d1 = new Date(date);
+    const d2 = new Date(date2 || new Date());
+    return (
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate()
     );
-    const startDate = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate() - 29
-    );
+  };
 
-    const response = await axiosInstance.get("/history", {
-      params: {
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
-      },
-    });
-    const data = response.data;
+  const fetchData = async () => {
+    try {
+      const today = new Date();
 
-    expense_total.value = data.expense_total || 0;
-    income_total.value = data.income_total || 0;
+      const endDate = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() + 1
+      );
+      const startDate = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - 29
+      );
 
-    const expenseData = data.expense || [];
-    const incomeData = data.income || [];
+      const response = await axiosInstance.get("/history", {
+        params: {
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+        },
+      });
+      const data = response.data;
 
-    expense.value = groupByDate(expenseData, "jumlah_pengeluaran");
+      expense_total.value = data.expense_total || 0;
+      income_total.value = data.income_total || 0;
 
-    income.value = groupByDate(incomeData, "jumlah_pemasukan");
+      const expenseData = data.expense || [];
+      const incomeData = data.income || [];
 
-    dailyExpense.value = expenseData.filter((item) =>
-      isSameDay(item.tanggal, today)
-    );
+      expense.value = groupByDate(expenseData, "jumlah_pengeluaran");
 
-    dailyIncome.value = incomeData.filter((item) =>
-      isSameDay(item.tanggal, today)
-    );
+      income.value = groupByDate(incomeData, "jumlah_pemasukan");
 
-    dailyExpenseTotal.value = dailyExpense.value.reduce(
-      (sum, item) => sum + Number(item.jumlah_pengeluaran),
-      0
-    );
+      dailyExpense.value = expenseData.filter((item) =>
+        isSameDay(item.tanggal, today)
+      );
 
-    dailyIncomeTotal.value = dailyIncome.value.reduce(
-      (sum, item) => sum + Number(item.jumlah_pemasukan),
-      0
-    );
-  } catch (error) {
-    console.error("Error fetching transactions:", error);
-  }
-};
+      dailyIncome.value = incomeData.filter((item) =>
+        isSameDay(item.tanggal, today)
+      );
 
-const groupByDate = (items) => {
-  // Groups items by date (YYYY-MM-DD), value is an array of items for that date
-  return items.reduce((acc, item) => {
-    const date = new Date(item.tanggal).toISOString().slice(0, 10); // 'YYYY-MM-DD'
-    if (!acc[date]) {
-      acc[date] = [];
+      dailyExpenseTotal.value = dailyExpense.value.reduce(
+        (sum, item) => sum + Number(item.jumlah_pengeluaran),
+        0
+      );
+
+      dailyIncomeTotal.value = dailyIncome.value.reduce(
+        (sum, item) => sum + Number(item.jumlah_pemasukan),
+        0
+      );
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
     }
-    acc[date].push(item);
-    return acc;
-  }, {});
-};
+  };
 
-import { computed } from "vue";
-import { Line } from "vue-chartjs";
-import {
-  Chart,
-  LineElement,
-  PointElement,
-  LinearScale,
-  Title,
-  CategoryScale,
-  Tooltip,
-  Legend,
-} from "chart.js";
+  const groupByDate = (items) => {
+    // Groups items by date (YYYY-MM-DD), value is an array of items for that date
+    return items.reduce((acc, item) => {
+      const date = new Date(item.tanggal).toLocaleDateString().slice(0, 10); // 'YYYY-MM-DD'
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(item);
+      return acc;
+    }, {});
+  };
 
-Chart.register(
-  LineElement,
-  PointElement,
-  LinearScale,
-  Title,
-  CategoryScale,
-  Tooltip,
-  Legend
-);
+  import { computed } from "vue";
+  import { Line } from "vue-chartjs";
+  import {
+    Chart,
+    LineElement,
+    PointElement,
+    LinearScale,
+    Title,
+    CategoryScale,
+    Tooltip,
+    Legend,
+  } from "chart.js";
 
-// Prepare chart data
-const chartData = computed(() => {
-  const dates = Object.keys(expense.value).sort();
-  return {
-    labels: dates,
+  Chart.register(
+    LineElement,
+    PointElement,
+    LinearScale,
+    Title,
+    CategoryScale,
+    Tooltip,
+    Legend
+  );
+
+  // Prepare chart data
+  const chartData = computed(() => {
+    const dates = Object.keys(expense.value).sort();
+    return {
+      labels: dates,
+      datasets: [
+        {
+          label: "Total Expense",
+          data: dates.map((date) =>
+            expense.value[date].reduce(
+              (sum, item) => sum + Number(item.jumlah_pengeluaran),
+              0
+            )
+          ),
+          fill: false,
+          borderColor: "#ef4444",
+          backgroundColor: "#ef4444",
+          tension: 0.3,
+        },
+      ],
+    };
+  });
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+      tooltip: { mode: "index", intersect: false },
+    },
+    scales: {
+      x: { title: { display: true, text: "Date" } },
+      y: {
+        title: { display: true, text: "Total Expense" },
+        beginAtZero: true,
+      },
+    },
+  };
+
+  import { Pie } from "vue-chartjs";
+  import { ArcElement } from "chart.js";
+
+  Chart.register(ArcElement);
+
+  const expenseIncomePieData = computed(() => ({
+    labels: ["Expense", "Income"],
     datasets: [
       {
-        label: "Total Expense",
-        data: dates.map((date) =>
-          expense.value[date].reduce(
-            (sum, item) => sum + Number(item.jumlah_pengeluaran),
-            0
-          )
-        ),
-        fill: false,
-        borderColor: "#ef4444",
-        backgroundColor: "#ef4444",
-        tension: 0.3,
+        data: [expense_total.value, income_total.value],
+        backgroundColor: ["#ef4444", "#22c55e"],
+        borderWidth: 1,
       },
     ],
+  }));
+
+  const expenseIncomePieOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: true, position: "bottom" },
+      title: { display: false },
+      tooltip: { enabled: true },
+    },
   };
-});
 
-const chartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { display: false },
-    title: { display: false },
-    tooltip: { mode: "index", intersect: false },
-  },
-  scales: {
-    x: { title: { display: true, text: "Date" } },
-    y: {
-      title: { display: true, text: "Total Expense" },
-      beginAtZero: true,
-    },
-  },
-};
-
-import { Pie } from "vue-chartjs";
-import { ArcElement } from "chart.js";
-
-Chart.register(ArcElement);
-
-const expenseIncomePieData = computed(() => ({
-  labels: ["Expense", "Income"],
-  datasets: [
-    {
-      data: [expense_total.value, income_total.value],
-      backgroundColor: ["#ef4444", "#22c55e"],
-      borderWidth: 1,
-    },
-  ],
-}));
-
-const expenseIncomePieOptions = {
-  responsive: true,
-  plugins: {
-    legend: { display: true, position: "bottom" },
-    title: { display: false },
-    tooltip: { enabled: true },
-  },
-};
-
-onMounted(() => {
-  fetchData();
-});
+  onMounted(() => {
+    fetchData();
+  });
 </script>
 
 <template>
