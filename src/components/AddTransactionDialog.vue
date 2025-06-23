@@ -1,123 +1,123 @@
 <script setup>
-import { ref, watch } from "vue";
-import { useToast } from "vue-toastification";
-import { useDraftStore } from "../store/draft.js";
-import axiosInstance from "../lib/axios_instance.js";
-import { VueFinalModal } from "vue-final-modal";
-import { CalendarDateRangeIcon } from "@heroicons/vue/24/outline";
-import { parseToThousand, parseToNumber } from "@/lib/thousand_parser.js";
+  import { ref, watch } from "vue";
+  import { useToast } from "vue-toastification";
+  import { useDraftStore } from "../store/draft.js";
+  import axiosInstance from "../lib/axios_instance.js";
+  import { VueFinalModal } from "vue-final-modal";
+  import { CalendarDateRangeIcon } from "@heroicons/vue/24/outline";
+  import { parseToThousand, parseToNumber } from "@/lib/thousand_parser.js";
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    required: true,
-  },
-});
+  const props = defineProps({
+    modelValue: {
+      type: Boolean,
+      required: true,
+    },
+  });
 
-const emit = defineEmits(["update:modelValue", "success"]);
-const show = ref(props.modelValue);
+  const emit = defineEmits(["update:modelValue", "success"]);
+  const show = ref(props.modelValue);
 
-watch(
-  () => props.modelValue,
-  (val) => {
-    show.value = val;
-  }
-);
-
-watch(show, (val) => {
-  emit("update:modelValue", val);
-});
-
-const draftStore = useDraftStore();
-const { isLoading, setLoad } = useLoading();
-
-const handlePost = async () => {
-  const data = toData();
-
-  if (!data.keterangan || !data.jumlah) {
-    toast.error("Semua field harus diisi!");
-    return;
-  }
-
-  setLoad(true);
-
-  try {
-    await axiosInstance.post(
-      `/create/${data.tipe == "pengeluaran" ? "expense" : "income"}`,
-      data
-    );
-    setLoad(false);
-
-    inputKeterangan.value = "";
-    inputJumlah.value = "0";
-
-    draftStore.clearDraft();
-
-    toast.success("Transaksi berhasil dibuat!");
-
-    show.value = false;
-    emit("success");
-  } catch (error) {
-    console.error(error);
-    setLoad(false);
-    if (error.response.data.message) {
-      toast.error(error.response.data.message);
-    } else {
-      toast.error("Terjadi kesalahan. Coba lagi.");
+  watch(
+    () => props.modelValue,
+    (val) => {
+      show.value = val;
     }
-  }
-};
+  );
 
-const toast = useToast();
+  watch(show, (val) => {
+    emit("update:modelValue", val);
+  });
 
-const inputKeterangan = ref("");
-const inputJumlah = ref("0");
-const inputTipe = ref("pengeluaran");
-const selectedDate = ref(Date());
+  const draftStore = useDraftStore();
+  const { isLoading, setLoad } = useLoading();
 
-const draft = draftStore.draft;
-if (draft) {
-  inputKeterangan.value = draft.keterangan;
-  inputJumlah.value = parseToThousand(draft.jumlah.toString());
-  selectedDate.value = draft.date ? new Date(draft.date) : new Date();
-  inputTipe.value = draft.tipe || "pengeluaran";
-}
+  const handlePost = async () => {
+    const data = toData();
 
-watch(inputJumlah, (newValue) => {
-  inputJumlah.value = parseToThousand(newValue);
-  useDraftStore().updateDraft(toData());
-});
+    if (!data.keterangan || !data.jumlah) {
+      toast.error("Semua field harus diisi!");
+      return;
+    }
 
-watch(inputKeterangan, (_) => {
-  useDraftStore().updateDraft(toData());
-});
+    setLoad(true);
 
-const toData = () => {
-  return {
-    keterangan: inputKeterangan.value,
-    jumlah: parseToNumber(inputJumlah.value),
-    date: selectedDate.value,
-    tipe: inputTipe.value,
+    try {
+      await axiosInstance.post(
+        `/create/${data.tipe == "pengeluaran" ? "expense" : "income"}`,
+        data
+      );
+      setLoad(false);
+
+      inputKeterangan.value = "";
+      inputJumlah.value = "0";
+
+      draftStore.clearDraft();
+
+      toast.success("Transaksi berhasil dibuat!");
+
+      show.value = false;
+      emit("success");
+    } catch (error) {
+      console.error(error);
+      setLoad(false);
+      if (error.response.data.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Terjadi kesalahan. Coba lagi.");
+      }
+    }
   };
-};
 
-watch(inputTipe, (_) => {
-  useDraftStore().updateDraft(toData());
-});
+  const toast = useToast();
 
-import DatePickerDialog from "@/components/DatePickerDialog.vue";
-import useLoading from "@/hooks/use_loading.js";
-import TypeDropdown from "./TypeDropdown.vue";
+  const inputKeterangan = ref("");
+  const inputJumlah = ref("0");
+  const inputTipe = ref("pengeluaran");
+  const selectedDate = ref(Date());
 
-// Date Picker Dialog
-const showDatePicker = ref(false);
+  const draft = draftStore.draft;
+  if (draft) {
+    inputKeterangan.value = draft.keterangan;
+    inputJumlah.value = parseToThousand(draft.jumlah.toString());
+    selectedDate.value = draft.date ? new Date(draft.date) : new Date();
+    inputTipe.value = draft.tipe || "pengeluaran";
+  }
 
-const handleDateConfirm = (date) => {
-  selectedDate.value = new Date(date);
-  useDraftStore().updateDraft(toData());
-};
+  watch(inputJumlah, (newValue) => {
+    inputJumlah.value = parseToThousand(newValue);
+    useDraftStore().updateDraft(toData());
+  });
 
-const showTipeMenu = ref(false);
+  watch(inputKeterangan, (_) => {
+    useDraftStore().updateDraft(toData());
+  });
+
+  const toData = () => {
+    return {
+      keterangan: inputKeterangan.value,
+      jumlah: parseToNumber(inputJumlah.value),
+      date: selectedDate.value,
+      tipe: inputTipe.value,
+    };
+  };
+
+  watch(inputTipe, (_) => {
+    useDraftStore().updateDraft(toData());
+  });
+
+  import DatePickerDialog from "@/components/DatePickerDialog.vue";
+  import useLoading from "@/hooks/use_loading.js";
+  import TypeDropdown from "./TypeDropdown.vue";
+
+  // Date Picker Dialog
+  const showDatePicker = ref(false);
+
+  const handleDateConfirm = (date) => {
+    selectedDate.value = new Date(date);
+    useDraftStore().updateDraft(toData());
+  };
+
+  const showTipeMenu = ref(false);
 </script>
 
 <template>
@@ -195,7 +195,11 @@ const showTipeMenu = ref(false);
             />
           </div>
         </div>
-        <TypeDropdown v-model="inputTipe" :showTipeMenu="showTipeMenu" />
+        <TypeDropdown
+          v-model="inputTipe"
+          :showTipeMenu="showTipeMenu"
+          class="mb-6"
+        />
         <DatePickerDialog
           v-model="showDatePicker"
           v-model:value="selectedDate"
