@@ -226,7 +226,12 @@ const showTipeMenu = ref(false);
             <span>
               {{
                 selectedDate
-                  ? new Date(selectedDate).toLocaleDateString()
+                  ? selectedDate.toLocaleDateString("id-ID", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
                   : "Pilih Tanggal"
               }}
             </span>
