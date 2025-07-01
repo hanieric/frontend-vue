@@ -1,5 +1,5 @@
 <template>
-  <div class="hidden md:flex w-full flex-col lg:flex-row gap-16">
+  <div class="hidden md:flex w-full flex-col xl:flex-row gap-16">
     <div class="flex-1">
       <h2 class="text-2xl font-bold mb-6 text-gray-800">Riwayat Pemasukan</h2>
       <div class="overflow-x-auto rounded-lg shadow mb-10">

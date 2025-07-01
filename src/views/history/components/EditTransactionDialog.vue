@@ -211,12 +211,6 @@ async function handleEdit() {
   setLoad(true);
 
   try {
-    console.log("Updating transaction with data:", {
-      id: props.id,
-      keterangan: inputKeterangan.value,
-      jumlah: parseToNumber(inputJumlah.value),
-      date: selectedDate.value.toISOString(),
-    });
     await axiosInstance.put(
       `/update/${inputTipe.value == "pemasukan" ? "income" : "expense"}`,
       {
@@ -258,7 +252,9 @@ async function handleDelete() {
 
   try {
     await axiosInstance.delete(
-      `/delete/${inputTipe.value == "pemasukan" ? "income" : "expense"}/${props.id}`,
+      `/delete/${inputTipe.value == "pemasukan" ? "income" : "expense"}/${
+        props.id
+      }`
     );
 
     setLoad(false);

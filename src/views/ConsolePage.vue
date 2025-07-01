@@ -73,12 +73,10 @@ const connectSocket = () => {
   });
 
   socket.on("connect", () => {
-    console.log("Connected to WebSocket server");
     onlineState.value = true;
   });
 
   socket.on("disconnect", () => {
-    console.log("Disconnected from WebSocket server");
     onlineState.value = false;
   });
 

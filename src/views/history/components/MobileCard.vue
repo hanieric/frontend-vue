@@ -80,6 +80,4 @@ const props = defineProps({
   onIncomeClick: Function,
   onExpenseClick: Function,
 });
-
-console.log("MobileCard props:", props);
 </script>

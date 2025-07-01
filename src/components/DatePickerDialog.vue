@@ -321,14 +321,8 @@ function goToNextMonth() {
 function selectDay(day) {
   // Only allow selecting days displayed
   selectedDate.value = day.date;
-  console.log("Selected date:", selectedDate.value.toISOString());
   // If user clicks a day from prev/next month in the filler, navigate to that month
   if (!day.isCurrentMonth) {
-    console.log(
-      "Navigating to month:",
-      day.date.getMonth(),
-      day.date.getFullYear()
-    );
     currentMonth.value = day.date.getMonth();
     currentYear.value = day.date.getFullYear();
   }
