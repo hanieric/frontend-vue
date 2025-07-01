@@ -132,19 +132,16 @@ const fetchData = async () => {
   hasError.value = false;
   try {
     const selectedMonthDate = selectedMonth.value;
+    const month = selectedMonthDate.getMonth();
+    const year = selectedMonthDate.getFullYear();
+
+    const startDateUTC = new Date(Date.UTC(year, month, 1, 0));
+    const endDateUTC = new Date(Date.UTC(year, month + 1, 0));
+
     const response = await axiosInstance.get("/history", {
       params: {
-        start_date: new Date(
-          selectedMonthDate.getFullYear(),
-          selectedMonthDate.getMonth(),
-          1
-        ).toISOString(),
-
-        end_date: new Date(
-          selectedMonthDate.getFullYear(),
-          selectedMonthDate.getMonth() + 1,
-          0
-        ).toISOString(),
+        start_date: startDateUTC.toISOString(),
+        end_date: endDateUTC.toISOString(),
       },
     });
     setLoad(false);
