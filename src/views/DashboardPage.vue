@@ -1,197 +1,198 @@
 <script setup>
-  import AddTransactionDialog from "../components/AddTransactionDialog.vue";
-  import { onMounted, ref, watch } from "vue";
-  import axiosInstance from "@/lib/axios_instance";
-  import {
-    ArrowDownTrayIcon,
-    ArrowUpTrayIcon,
-  } from "@heroicons/vue/24/outline";
-  import { useAuthStore } from "@/store/auth";
+import AddTransactionDialog from "../components/AddTransactionDialog.vue";
+import { onMounted, ref, watch } from "vue";
+import axiosInstance from "@/lib/axios_instance";
+import { ArrowDownTrayIcon, ArrowUpTrayIcon } from "@heroicons/vue/24/outline";
+import { useAuthStore } from "@/store/auth";
 
-  const authStore = useAuthStore();
+const authStore = useAuthStore();
+const { isLoading, setLoad } = useLoading();
 
-  const showAddTransactionDialog = ref(false);
+const showAddTransactionDialog = ref(false);
 
-  const expense = ref({});
-  const income = ref({});
+const expense = ref({});
+const income = ref({});
 
-  const expense_total = ref(0);
-  const income_total = ref(0);
+const expense_total = ref(0);
+const income_total = ref(0);
 
-  const dailyExpense = ref([]);
-  const dailyIncome = ref([]);
+const dailyExpense = ref([]);
+const dailyIncome = ref([]);
 
-  const dailyExpenseTotal = ref(0);
-  const dailyIncomeTotal = ref(0);
+const dailyExpenseTotal = ref(0);
+const dailyIncomeTotal = ref(0);
 
-  const isSameDay = (date, date2) => {
-    // Check if two dates are the same day (ignoring time)
-    const d1 = new Date(date);
-    const d2 = new Date(date2 || new Date());
-    return (
-      d1.getFullYear() === d2.getFullYear() &&
-      d1.getMonth() === d2.getMonth() &&
-      d1.getDate() === d2.getDate()
-    );
-  };
-
-  const fetchData = async () => {
-    try {
-      const today = new Date();
-
-      const endDate = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate() + 1
-      );
-      const startDate = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate() - 29
-      );
-
-      const response = await axiosInstance.get("/history", {
-        params: {
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString(),
-        },
-      });
-      const data = response.data;
-
-      expense_total.value = data.expense_total || 0;
-      income_total.value = data.income_total || 0;
-
-      const expenseData = data.expense || [];
-      const incomeData = data.income || [];
-
-      expense.value = groupByDate(expenseData, "jumlah_pengeluaran");
-
-      income.value = groupByDate(incomeData, "jumlah_pemasukan");
-
-      dailyExpense.value = expenseData.filter((item) =>
-        isSameDay(item.tanggal, today)
-      );
-
-      dailyIncome.value = incomeData.filter((item) =>
-        isSameDay(item.tanggal, today)
-      );
-
-      dailyExpenseTotal.value = dailyExpense.value.reduce(
-        (sum, item) => sum + Number(item.jumlah_pengeluaran),
-        0
-      );
-
-      dailyIncomeTotal.value = dailyIncome.value.reduce(
-        (sum, item) => sum + Number(item.jumlah_pemasukan),
-        0
-      );
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-    }
-  };
-
-  const groupByDate = (items) => {
-    // Groups items by date (YYYY-MM-DD), value is an array of items for that date
-    return items.reduce((acc, item) => {
-      const date = new Date(item.tanggal).toLocaleDateString().slice(0, 10); // 'YYYY-MM-DD'
-      if (!acc[date]) {
-        acc[date] = [];
-      }
-      acc[date].push(item);
-      return acc;
-    }, {});
-  };
-
-  import { computed } from "vue";
-  import { Line } from "vue-chartjs";
-  import {
-    Chart,
-    LineElement,
-    PointElement,
-    LinearScale,
-    Title,
-    CategoryScale,
-    Tooltip,
-    Legend,
-  } from "chart.js";
-
-  Chart.register(
-    LineElement,
-    PointElement,
-    LinearScale,
-    Title,
-    CategoryScale,
-    Tooltip,
-    Legend
+const isSameDay = (date, date2) => {
+  // Check if two dates are the same day (ignoring time)
+  const d1 = new Date(date);
+  const d2 = new Date(date2 || new Date());
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
   );
+};
 
-  // Prepare chart data
-  const chartData = computed(() => {
-    const dates = Object.keys(expense.value).sort();
-    return {
-      labels: dates,
-      datasets: [
-        {
-          label: "Total Expense",
-          data: dates.map((date) =>
-            expense.value[date].reduce(
-              (sum, item) => sum + Number(item.jumlah_pengeluaran),
-              0
-            )
-          ),
-          fill: false,
-          borderColor: "#ef4444",
-          backgroundColor: "#ef4444",
-          tension: 0.3,
-        },
-      ],
-    };
-  });
+const fetchData = async () => {
+  setLoad(true);
+  try {
+    const today = new Date();
 
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      title: { display: false },
-      tooltip: { mode: "index", intersect: false },
-    },
-    scales: {
-      x: { title: { display: true, text: "Date" } },
-      y: {
-        title: { display: true, text: "Total Expense" },
-        beginAtZero: true,
+    const endDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() + 1
+    );
+    const startDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() - 29
+    );
+
+    const response = await axiosInstance.get("/history", {
+      params: {
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
       },
-    },
-  };
+    });
+    const data = response.data;
 
-  import { Pie } from "vue-chartjs";
-  import { ArcElement } from "chart.js";
+    expense_total.value = data.expense_total || 0;
+    income_total.value = data.income_total || 0;
 
-  Chart.register(ArcElement);
+    const expenseData = data.expense || [];
+    const incomeData = data.income || [];
 
-  const expenseIncomePieData = computed(() => ({
-    labels: ["Expense", "Income"],
+    expense.value = groupByDate(expenseData, "jumlah_pengeluaran");
+
+    income.value = groupByDate(incomeData, "jumlah_pemasukan");
+
+    dailyExpense.value = expenseData.filter((item) =>
+      isSameDay(item.tanggal, today)
+    );
+
+    dailyIncome.value = incomeData.filter((item) =>
+      isSameDay(item.tanggal, today)
+    );
+
+    dailyExpenseTotal.value = dailyExpense.value.reduce(
+      (sum, item) => sum + Number(item.jumlah_pengeluaran),
+      0
+    );
+
+    dailyIncomeTotal.value = dailyIncome.value.reduce(
+      (sum, item) => sum + Number(item.jumlah_pemasukan),
+      0
+    );
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+  }
+  setLoad(false);
+};
+
+const groupByDate = (items) => {
+  // Groups items by date (YYYY-MM-DD), value is an array of items for that date
+  return items.reduce((acc, item) => {
+    const date = new Date(item.tanggal).toLocaleDateString().slice(0, 10); // 'YYYY-MM-DD'
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(item);
+    return acc;
+  }, {});
+};
+
+import { computed } from "vue";
+import { Line } from "vue-chartjs";
+import {
+  Chart,
+  LineElement,
+  PointElement,
+  LinearScale,
+  Title,
+  CategoryScale,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+Chart.register(
+  LineElement,
+  PointElement,
+  LinearScale,
+  Title,
+  CategoryScale,
+  Tooltip,
+  Legend
+);
+
+// Prepare chart data
+const chartData = computed(() => {
+  const dates = Object.keys(expense.value).sort();
+  return {
+    labels: dates,
     datasets: [
       {
-        data: [expense_total.value, income_total.value],
-        backgroundColor: ["#ef4444", "#22c55e"],
-        borderWidth: 1,
+        label: "Total Expense",
+        data: dates.map((date) =>
+          expense.value[date].reduce(
+            (sum, item) => sum + Number(item.jumlah_pengeluaran),
+            0
+          )
+        ),
+        fill: false,
+        borderColor: "#ef4444",
+        backgroundColor: "#ef4444",
+        tension: 0.3,
       },
     ],
-  }));
-
-  const expenseIncomePieOptions = {
-    responsive: true,
-    plugins: {
-      legend: { display: true, position: "bottom" },
-      title: { display: false },
-      tooltip: { enabled: true },
-    },
   };
+});
 
-  onMounted(() => {
-    fetchData();
-  });
+const chartOptions = {
+  responsive: true,
+  plugins: {
+    legend: { display: false },
+    title: { display: false },
+    tooltip: { mode: "index", intersect: false },
+  },
+  scales: {
+    x: { title: { display: true, text: "Date" } },
+    y: {
+      title: { display: true, text: "Total Expense" },
+      beginAtZero: true,
+    },
+  },
+};
+
+import { Pie } from "vue-chartjs";
+import { ArcElement } from "chart.js";
+import useLoading from "@/hooks/use_loading";
+
+Chart.register(ArcElement);
+
+const expenseIncomePieData = computed(() => ({
+  labels: ["Expense", "Income"],
+  datasets: [
+    {
+      data: [expense_total.value, income_total.value],
+      backgroundColor: ["#ef4444", "#22c55e"],
+      borderWidth: 1,
+    },
+  ],
+}));
+
+const expenseIncomePieOptions = {
+  responsive: true,
+  plugins: {
+    legend: { display: true, position: "bottom" },
+    title: { display: false },
+    tooltip: { enabled: true },
+  },
+};
+
+onMounted(() => {
+  fetchData();
+});
 </script>
 
 <template>
@@ -295,31 +296,46 @@
               >
             </div>
             <ul class="list-none p-0 m-0 divide-y divide-gray-100 flex-1">
-              <li
-                v-for="item in dailyExpense"
-                :key="'expense-' + item.id"
-                class="flex justify-between py-2 items-center"
-              >
-                <div>
-                  <span class="text-gray-700 font-medium">{{
-                    item.nama_pengeluaran
-                  }}</span>
-                  <span class="block text-xs text-gray-400">{{
-                    new Date(item.tanggal).toLocaleDateString()
-                  }}</span>
-                </div>
-                <span class="text-red-500 font-bold"
-                  >- Rp{{
-                    Number(item.jumlah_pengeluaran).toLocaleString()
-                  }}</span
+              <template v-if="isLoading">
+                <li
+                  v-for="n in 3"
+                  :key="'expense-shimmer-' + n"
+                  class="flex justify-between py-2 items-center animate-pulse"
                 >
-              </li>
-              <li
-                v-if="!dailyExpense.length"
-                class="py-2 text-gray-400 text-center"
-              >
-                No expenses
-              </li>
+                  <div>
+                    <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                    <div class="h-3 w-20 bg-gray-100 rounded"></div>
+                  </div>
+                  <div class="h-4 w-16 bg-gray-200 rounded"></div>
+                </li>
+              </template>
+              <template v-else>
+                <li
+                  v-for="item in dailyExpense"
+                  :key="'expense-' + item.id"
+                  class="flex justify-between py-2 items-center"
+                >
+                  <div>
+                    <span class="text-gray-700 font-medium">{{
+                      item.nama_pengeluaran
+                    }}</span>
+                    <span class="block text-xs text-gray-400">{{
+                      new Date(item.tanggal).toLocaleDateString()
+                    }}</span>
+                  </div>
+                  <span class="text-red-500 font-bold"
+                    >- Rp{{
+                      Number(item.jumlah_pengeluaran).toLocaleString()
+                    }}</span
+                  >
+                </li>
+                <li
+                  v-if="!dailyExpense.length"
+                  class="py-2 text-gray-400 text-center"
+                >
+                  No expenses
+                </li>
+              </template>
             </ul>
           </div>
           <div class="w-px bg-gray-200 mx-4 hidden xl:block" />
@@ -341,31 +357,46 @@
               </span>
             </div>
             <ul class="list-none p-0 m-0 divide-y divide-gray-100 flex-1">
-              <li
-                v-for="item in dailyIncome"
-                :key="'income-' + item.id"
-                class="flex justify-between py-2 items-center"
-              >
-                <div>
-                  <span class="text-gray-700 font-medium">{{
-                    item.nama_pemasukan
-                  }}</span>
-                  <span class="block text-xs text-gray-400">{{
-                    new Date(item.tanggal).toLocaleDateString()
-                  }}</span>
-                </div>
-                <span class="text-green-600 font-bold"
-                  >+ Rp{{
-                    Number(item.jumlah_pemasukan).toLocaleString()
-                  }}</span
+              <template v-if="isLoading">
+                <li
+                  v-for="n in 3"
+                  :key="'income-shimmer-' + n"
+                  class="flex justify-between py-2 items-center animate-pulse"
                 >
-              </li>
-              <li
-                v-if="!dailyIncome.length"
-                class="py-2 text-gray-400 text-center"
-              >
-                No incomes
-              </li>
+                  <div>
+                    <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                    <div class="h-3 w-20 bg-gray-100 rounded"></div>
+                  </div>
+                  <div class="h-4 w-16 bg-gray-200 rounded"></div>
+                </li>
+              </template>
+              <template v-else>
+                <li
+                  v-for="item in dailyIncome"
+                  :key="'income-' + item.id"
+                  class="flex justify-between py-2 items-center"
+                >
+                  <div>
+                    <span class="text-gray-700 font-medium">{{
+                      item.nama_pemasukan
+                    }}</span>
+                    <span class="block text-xs text-gray-400">{{
+                      new Date(item.tanggal).toLocaleDateString()
+                    }}</span>
+                  </div>
+                  <span class="text-green-600 font-bold"
+                    >+ Rp{{
+                      Number(item.jumlah_pemasukan).toLocaleString()
+                    }}</span
+                  >
+                </li>
+                <li
+                  v-if="!dailyIncome.length"
+                  class="py-2 text-gray-400 text-center"
+                >
+                  No incomes
+                </li>
+              </template>
             </ul>
           </div>
         </div>
