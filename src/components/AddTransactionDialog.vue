@@ -1,123 +1,129 @@
 <script setup>
-  import { ref, watch } from "vue";
-  import { useToast } from "vue-toastification";
-  import { useDraftStore } from "../store/draft.js";
-  import axiosInstance from "../lib/axios_instance.js";
-  import { VueFinalModal } from "vue-final-modal";
-  import { CalendarDateRangeIcon } from "@heroicons/vue/24/outline";
-  import { parseToThousand, parseToNumber } from "@/lib/thousand_parser.js";
+import { ref, watch } from "vue";
+import { useToast } from "vue-toastification";
+import { useDraftStore } from "../store/draft.js";
+import axiosInstance from "../lib/axios_instance.js";
+import { VueFinalModal } from "vue-final-modal";
+import { CalendarDateRangeIcon } from "@heroicons/vue/24/outline";
+import { parseToThousand, parseToNumber } from "@/lib/thousand_parser.js";
 
-  const props = defineProps({
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  });
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    required: true,
+  },
+});
 
-  const emit = defineEmits(["update:modelValue", "success"]);
-  const show = ref(props.modelValue);
+const emit = defineEmits(["update:modelValue", "success"]);
+const show = ref(props.modelValue);
 
-  watch(
-    () => props.modelValue,
-    (val) => {
-      show.value = val;
-    }
-  );
+watch(
+  () => props.modelValue,
+  (val) => {
+    show.value = val;
+  }
+);
 
-  watch(show, (val) => {
-    emit("update:modelValue", val);
-  });
+watch(show, (val) => {
+  emit("update:modelValue", val);
+});
 
-  const draftStore = useDraftStore();
-  const { isLoading, setLoad } = useLoading();
+const draftStore = useDraftStore();
+const { isLoading, setLoad } = useLoading();
 
-  const handlePost = async () => {
-    const data = toData();
+const handlePost = async () => {
+  const data = toData();
 
-    if (!data.keterangan || !data.jumlah) {
-      toast.error("Semua field harus diisi!");
-      return;
-    }
-
-    setLoad(true);
-
-    try {
-      await axiosInstance.post(
-        `/create/${data.tipe == "pengeluaran" ? "expense" : "income"}`,
-        data
-      );
-      setLoad(false);
-
-      inputKeterangan.value = "";
-      inputJumlah.value = "0";
-
-      draftStore.clearDraft();
-
-      toast.success("Transaksi berhasil dibuat!");
-
-      show.value = false;
-      emit("success");
-    } catch (error) {
-      console.error(error);
-      setLoad(false);
-      if (error.response.data.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error("Terjadi kesalahan. Coba lagi.");
-      }
-    }
-  };
-
-  const toast = useToast();
-
-  const inputKeterangan = ref("");
-  const inputJumlah = ref("0");
-  const inputTipe = ref("pengeluaran");
-  const selectedDate = ref(Date());
-
-  const draft = draftStore.draft;
-  if (draft) {
-    inputKeterangan.value = draft.keterangan;
-    inputJumlah.value = parseToThousand(draft.jumlah.toString());
-    selectedDate.value = draft.date ? new Date(draft.date) : new Date();
-    inputTipe.value = draft.tipe || "pengeluaran";
+  if (!data.keterangan || !data.jumlah) {
+    toast.error("Semua field harus diisi!");
+    return;
   }
 
-  watch(inputJumlah, (newValue) => {
-    inputJumlah.value = parseToThousand(newValue);
-    useDraftStore().updateDraft(toData());
-  });
+  setLoad(true);
 
-  watch(inputKeterangan, (_) => {
-    useDraftStore().updateDraft(toData());
-  });
+  try {
+    await axiosInstance.post(
+      `/create/${data.tipe == "pengeluaran" ? "expense" : "income"}`,
+      data
+    );
+    setLoad(false);
 
-  const toData = () => {
-    return {
-      keterangan: inputKeterangan.value,
-      jumlah: parseToNumber(inputJumlah.value),
-      date: selectedDate.value,
-      tipe: inputTipe.value,
-    };
+    inputKeterangan.value = "";
+    inputJumlah.value = "0";
+
+    draftStore.clearDraft();
+
+    toast.success("Transaksi berhasil dibuat!");
+
+    show.value = false;
+    emit("success");
+  } catch (error) {
+    console.error(error);
+    setLoad(false);
+    if (error.response.data.message) {
+      toast.error(error.response.data.message);
+    } else {
+      toast.error("Terjadi kesalahan. Coba lagi.");
+    }
+  }
+};
+
+const toast = useToast();
+
+const inputKeterangan = ref("");
+const inputJumlah = ref("0");
+const inputTipe = ref("pengeluaran");
+const selectedDate = ref(Date());
+
+const draft = draftStore.draft;
+if (draft) {
+  inputKeterangan.value = draft.keterangan;
+  inputJumlah.value = parseToThousand(draft.jumlah.toString());
+  selectedDate.value = draft.date ? new Date(draft.date) : new Date();
+  inputTipe.value = draft.tipe || "pengeluaran";
+}
+
+watch(inputJumlah, (newValue) => {
+  inputJumlah.value = parseToThousand(newValue);
+  useDraftStore().updateDraft(toData());
+});
+
+watch(inputKeterangan, (_) => {
+  useDraftStore().updateDraft(toData());
+});
+
+const toData = () => {
+  const dateObj = new Date(selectedDate.value);
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  const localDateString = `${year}-${month}-${day}`;
+
+  return {
+    keterangan: inputKeterangan.value,
+    jumlah: parseToNumber(inputJumlah.value),
+    date: localDateString,
+    tipe: inputTipe.value,
   };
+};
 
-  watch(inputTipe, (_) => {
-    useDraftStore().updateDraft(toData());
-  });
+watch(inputTipe, (_) => {
+  useDraftStore().updateDraft(toData());
+});
 
-  import DatePickerDialog from "@/components/DatePickerDialog.vue";
-  import useLoading from "@/hooks/use_loading.js";
-  import TypeDropdown from "./TypeDropdown.vue";
+import DatePickerDialog from "@/components/DatePickerDialog.vue";
+import useLoading from "@/hooks/use_loading.js";
+import TypeDropdown from "./TypeDropdown.vue";
 
-  // Date Picker Dialog
-  const showDatePicker = ref(false);
+// Date Picker Dialog
+const showDatePicker = ref(false);
 
-  const handleDateConfirm = (date) => {
-    selectedDate.value = new Date(date);
-    useDraftStore().updateDraft(toData());
-  };
+const handleDateConfirm = (date) => {
+  selectedDate.value = new Date(date);
+  useDraftStore().updateDraft(toData());
+};
 
-  const showTipeMenu = ref(false);
+const showTipeMenu = ref(false);
 </script>
 
 <template>
