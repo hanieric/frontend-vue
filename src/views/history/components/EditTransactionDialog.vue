@@ -207,18 +207,29 @@ function handleDateConfirm(date) {
 const { isLoading, setLoad } = useLoading();
 const toast = useToast();
 
+const toData = () => {
+  const dateObj = new Date(selectedDate.value);
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  const localDateString = `${year}-${month}-${day}`;
+
+  return {
+    id: props.id,
+    keterangan: inputKeterangan.value,
+    jumlah: parseToNumber(inputJumlah.value),
+    date: localDateString,
+    tipe: inputTipe.value,
+  };
+};
+
 async function handleEdit() {
   setLoad(true);
 
   try {
     await axiosInstance.put(
       `/update/${inputTipe.value == "pemasukan" ? "income" : "expense"}`,
-      {
-        id: props.id,
-        keterangan: inputKeterangan.value,
-        jumlah: parseToNumber(inputJumlah.value),
-        date: selectedDate.value.toISOString(),
-      }
+      toData()
     );
 
     setLoad(false);
