@@ -2,7 +2,7 @@
   <VueFinalModal
     v-model="isOpen"
     class="fixed inset-0 flex items-center justify-center bg-black/40"
-    @click.self="close"
+    :esc-to-close="true"
   >
     <div
       class="bg-white rounded-lg shadow-lg w-screen max-w-sm md:max-w-md p-6 relative"
@@ -149,9 +149,13 @@ const isOpen = ref(props.modelValue); // Local state for modal visibility
 watch(
   () => props.modelValue,
   (newValue) => {
-    isOpen.value = newValue; // Sync local state with prop
+    isOpen.value = newValue;
   }
 );
+
+watch(isOpen, (newValue) => {
+  emits("update:modelValue", newValue);
+});
 
 // Modal control functions (from your original code)
 function close() {
@@ -404,6 +408,13 @@ watch(showYearDropdown, async (val) => {
 
 onMounted(() => {
   document.addEventListener("mousedown", handleClickOutside);
+
+  document.addEventListener("keydown", (e) => {
+    if (!isOpen.value) return;
+    if (e.key === "Enter") {
+      confirm();
+    }
+  });
 });
 onBeforeUnmount(() => {
   document.removeEventListener("mousedown", handleClickOutside);
